@@ -1,5 +1,6 @@
 
 import functools
+import operator
 
 import jax
 import jax.numpy as jnp
@@ -51,3 +52,14 @@ class VectorAttention(base.VectorAttention):
     def apply_fun(self, inputs, rng=None):
         result = self._evaluate(inputs)
         return result.output
+
+    def _calculate_attention(self, scores, values, old_shape):
+        dims, reduce_axes = self._get_reduction()
+
+        last_dim = functools.reduce(operator.mul, old_shape[dims:], 1)
+        shape = old_shape[:dims] + (last_dim,)
+        scores = self.math.reshape(scores, shape)
+        attention = self.math.reshape(self.math.softmax(scores), old_shape)
+        output = self.math.sum(attention*values, reduce_axes)
+
+        return attention, output
