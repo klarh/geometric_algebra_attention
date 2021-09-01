@@ -46,7 +46,11 @@ class VectorAttention:
 
     @property
     def invariant_dims(self):
-        return 1 if self.rank == 1 else 2
+        return self.get_invariant_dims(self.rank)
+
+    @staticmethod
+    def get_invariant_dims(rank):
+        return 1 if rank == 1 else 2
 
     def _merge_fun(self, *args):
         if self.merge_fun == 'mean':
