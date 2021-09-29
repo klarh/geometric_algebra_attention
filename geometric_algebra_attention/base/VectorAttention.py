@@ -44,31 +44,13 @@ class VectorAttention:
         self.join_fun = join_fun
         self.rank = rank
 
-    @property
-    def invariant_dims(self):
-        return self.get_invariant_dims(self.rank)
-
     @staticmethod
     def get_invariant_dims(rank):
         return 1 if rank == 1 else 2
 
-    def _merge_fun(self, *args):
-        if self.merge_fun == 'mean':
-            return sum(args)/float(len(args))
-        elif self.merge_fun == 'concat':
-            return sum(
-                [self.math.tensordot(x, b, 1) for (x, b) in zip(args, self.merge_kernels)])
-        else:
-            raise NotImplementedError()
-
-    def _join_fun(self, *args):
-        if self.join_fun == 'mean':
-            return sum(args)/float(len(args))
-        elif self.join_fun == 'concat':
-            return sum(
-                [self.math.tensordot(x, b, 1) for (x, b) in zip(args, self.join_kernels)])
-        else:
-            raise NotImplementedError()
+    @property
+    def invariant_dims(self):
+        return self.get_invariant_dims(self.rank)
 
     def _build_weight_definitions(self, n_dim):
         result = self.WeightDefinitionSet({}, {})
@@ -87,6 +69,43 @@ class VectorAttention:
                                       for i in range(2)]
 
         return result
+
+    def _calculate_attention(self, scores, values, old_shape):
+        dims, reduce_axes = self._get_reduction()
+
+        shape = self.math.concat(
+            [self.math.asarray(old_shape[:dims]),
+             self.math.product(self.math.asarray(old_shape[dims:]), 0,
+                               keepdims=True)], -1)
+        scores = self.math.reshape(scores, shape)
+        attention = self.math.reshape(self.math.softmax(scores), old_shape)
+        output = self.math.sum(attention*values, reduce_axes)
+
+        return attention, output
+
+    def _evaluate(self, inputs, mask=None):
+        parsed_inputs = self._parse_inputs(inputs)
+        products = self._expand_products(
+            parsed_inputs.positions, parsed_inputs.values)
+        broadcast_indices = products.broadcast_indices
+        invariants = products.invariants
+        neighborhood_values = self._merge_fun(*products.values)
+        invar_values = self.value_net(invariants)
+
+        joined_values = self._join_fun(invar_values, neighborhood_values)
+        tuple_weights = self._make_tuple_weights(broadcast_indices, parsed_inputs.weights)
+        new_values = tuple_weights*joined_values
+
+        scores = self.score_net(joined_values)
+        old_shape = self.math.shape(scores)
+
+        scores = self._mask_scores(scores, broadcast_indices, mask)
+
+        attention, output = self._calculate_attention(
+            scores, new_values, old_shape)
+
+        return self.OutputType(
+            attention, output, invariants, invar_values, new_values)
 
     def _expand_products(self, rs, vs):
         broadcast_indices = []
@@ -123,6 +142,33 @@ class VectorAttention:
 
         return self.ExpandedProducts(broadcast_indices, invar, covar, expanded_vs)
 
+    def _get_reduction(self):
+        if self.reduce:
+            dims = -(self.rank + 1)
+            reduce_axes = tuple(-i - 2 for i in range(self.rank))
+        else:
+            dims = -self.rank
+            reduce_axes = tuple(-i - 2 for i in range(self.rank - 1))
+        return dims, reduce_axes
+
+    def _join_fun(self, *args):
+        if self.join_fun == 'mean':
+            return sum(args)/float(len(args))
+        elif self.join_fun == 'concat':
+            return sum(
+                [self.math.tensordot(x, b, 1) for (x, b) in zip(args, self.join_kernels)])
+        else:
+            raise NotImplementedError()
+
+    def _make_tuple_weights(self, broadcast_indices, weights):
+        if isinstance(weights, int):
+            return weights
+        expanded_weights = [weights[..., None][idx] for idx in broadcast_indices]
+        result = 1
+        for w in expanded_weights:
+            result = result*w
+        return self.math.pow(result, 1./self.rank)
+
     def _mask_scores(self, scores, broadcast_indices, mask):
         if mask is not None:
             parsed_mask = self._parse_inputs(mask)
@@ -142,60 +188,14 @@ class VectorAttention:
             scores = self.math.where(product_mask, scores, -HUGE_FLOAT)
         return scores
 
-    def _evaluate(self, inputs, mask=None):
-        parsed_inputs = self._parse_inputs(inputs)
-        products = self._expand_products(
-            parsed_inputs.positions, parsed_inputs.values)
-        broadcast_indices = products.broadcast_indices
-        invariants = products.invariants
-        neighborhood_values = self._merge_fun(*products.values)
-        invar_values = self.value_net(invariants)
-
-        joined_values = self._join_fun(invar_values, neighborhood_values)
-        tuple_weights = self._make_tuple_weights(broadcast_indices, parsed_inputs.weights)
-        new_values = tuple_weights*joined_values
-
-        scores = self.score_net(joined_values)
-        old_shape = self.math.shape(scores)
-
-        scores = self._mask_scores(scores, broadcast_indices, mask)
-
-        attention, output = self._calculate_attention(
-            scores, new_values, old_shape)
-
-        return self.OutputType(
-            attention, output, invariants, invar_values, new_values)
-
-    def _get_reduction(self):
-        if self.reduce:
-            dims = -(self.rank + 1)
-            reduce_axes = tuple(-i - 2 for i in range(self.rank))
+    def _merge_fun(self, *args):
+        if self.merge_fun == 'mean':
+            return sum(args)/float(len(args))
+        elif self.merge_fun == 'concat':
+            return sum(
+                [self.math.tensordot(x, b, 1) for (x, b) in zip(args, self.merge_kernels)])
         else:
-            dims = -self.rank
-            reduce_axes = tuple(-i - 2 for i in range(self.rank - 1))
-        return dims, reduce_axes
-
-    def _calculate_attention(self, scores, values, old_shape):
-        dims, reduce_axes = self._get_reduction()
-
-        shape = self.math.concat(
-            [self.math.asarray(old_shape[:dims]),
-             self.math.product(self.math.asarray(old_shape[dims:]), 0,
-                               keepdims=True)], -1)
-        scores = self.math.reshape(scores, shape)
-        attention = self.math.reshape(self.math.softmax(scores), old_shape)
-        output = self.math.sum(attention*values, reduce_axes)
-
-        return attention, output
-
-    def _make_tuple_weights(self, broadcast_indices, weights):
-        if isinstance(weights, int):
-            return weights
-        expanded_weights = [weights[..., None][idx] for idx in broadcast_indices]
-        result = 1
-        for w in expanded_weights:
-            result = result*w
-        return self.math.pow(result, 1./self.rank)
+            raise NotImplementedError()
 
     def _parse_inputs(self, inputs):
         if len(inputs) == 2:

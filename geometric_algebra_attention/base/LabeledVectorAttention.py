@@ -10,21 +10,6 @@ class LabeledVectorAttention:
 
         return result
 
-    def _expand_products(self, rs, vs):
-        products = super()._expand_products(rs, vs)
-        broadcast_indices = []
-        for idx in products.broadcast_indices:
-            idx = list(idx)
-            idx.insert(-1 - self.rank, None)
-            broadcast_indices.append(idx)
-
-        index = tuple([Ellipsis, None] + (self.rank + 1)*[slice(None)])
-        invars = products.invariants[index]
-        covars = products.covariants[index]
-        new_vs = [v[index] for v in products.values]
-
-        return self.ExpandedProducts(broadcast_indices, invars, covars, new_vs)
-
     def _evaluate(self, inputs, mask=None):
         (positions, values, child_values) = inputs
         products = self._expand_products(positions, values)
@@ -56,3 +41,18 @@ class LabeledVectorAttention:
 
         return self.OutputType(
             attention, output, invariants, invar_values, new_values)
+
+    def _expand_products(self, rs, vs):
+        products = super()._expand_products(rs, vs)
+        broadcast_indices = []
+        for idx in products.broadcast_indices:
+            idx = list(idx)
+            idx.insert(-1 - self.rank, None)
+            broadcast_indices.append(idx)
+
+        index = tuple([Ellipsis, None] + (self.rank + 1)*[slice(None)])
+        invars = products.invariants[index]
+        covars = products.covariants[index]
+        new_vs = [v[index] for v in products.values]
+
+        return self.ExpandedProducts(broadcast_indices, invars, covars, new_vs)
