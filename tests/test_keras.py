@@ -75,7 +75,7 @@ class KerasTests(AllTests, unittest.TestCase):
     @tf.function
     def label_vector_prediction(self, r, v, v2, key=None):
         net = self.get_label_vector_layer(key)
-        return net((r, v, v2))
+        return net((v2, (r, v)))
 
 if __name__ == '__main__':
     unittest.main()

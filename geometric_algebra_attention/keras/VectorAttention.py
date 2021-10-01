@@ -10,10 +10,13 @@ class VectorAttention(base.VectorAttention, keras.layers.Layer):
     math = TFAttention.math
 
     def __init__(self, score_net, value_net, reduce=True,
-                 merge_fun='mean', join_fun='mean', rank=2, **kwargs):
+                 merge_fun='mean', join_fun='mean', rank=2,
+                 invariant_mode='single', covariant_mode='single',
+                 **kwargs):
         keras.layers.Layer.__init__(self, **kwargs)
         base.VectorAttention.__init__(
-            self, score_net, value_net, reduce, merge_fun, join_fun, rank)
+            self, score_net, value_net, reduce, merge_fun, join_fun, rank,
+            invariant_mode, covariant_mode)
 
     def build(self, input_shape):
         n_dim = input_shape[1][-1]

@@ -36,7 +36,7 @@ class VectorAttention(base.VectorAttention):
 
     def init_fun(self, rng, input_shape):
         input_shapes = self._parse_inputs(input_shape)
-        self.n_dim = input_shapes.values[-1]
+        self.n_dim = input_shapes[0].values[-1]
 
         rng, next_rng = jax.random.split(rng)
         _, self.score_net_params = self.score_net_init(next_rng, (self.n_dim,))
@@ -55,12 +55,12 @@ class VectorAttention(base.VectorAttention):
         weight_sets = self._build_weight_definitions(self.n_dim)
         for (name, defs) in weight_sets.groups.items():
             weights = [
-                rng.normal(stddev=def_.stdev, size=def_.shape)
+                jax.random.normal(rng, shape=def_.shape)/def_.stdev
                 for (def_, rng) in zip(defs, rngs(rng))]
             setattr(self, name, weights)
 
         for ((name, def_), rng) in zip(weight_sets.singles.items(), rngs(rng_singles)):
-            weight = rng.normal(stddev=def_.stdev, size=def_.shape)
+            weight = jax.random.normal(rng, shape=def_.shape)/def_.stdev
             setattr(self, name, weight)
 
         return input_shape, self.params

@@ -82,7 +82,7 @@ class PytorchTests(AllTests, unittest.TestCase):
     def label_vector_prediction(self, r, v, v2, key=None):
         r, v, v2 = map(pt.as_tensor, (r, v, v2))
         net = self.get_label_vector_layer(key)
-        return net.forward((r, v, v2)).detach().numpy()
+        return net.forward((v2, (r, v))).detach().numpy()
 
 if __name__ == '__main__':
     unittest.main()

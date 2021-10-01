@@ -11,39 +11,35 @@ class LabeledVectorAttention:
         return result
 
     def _evaluate(self, inputs, mask=None):
-        (positions, values, child_values) = inputs
-        products = self._expand_products(positions, values)
-        broadcast_indices = products.broadcast_indices
-        invariants = products.invariants
-        neighborhood_values = self._merge_fun(*products.values)
-        invar_values = self.value_net(invariants)
+        (child_values, inputs) = inputs
+        parsed_inputs = self._parse_inputs(inputs)
+        products = self._get_product_summary(parsed_inputs)
+        invar_values = self.value_net(products.summary.invariants)
 
         swap_i = -self.rank - 1
         swap_j = swap_i - 1
-        child_expand_indices = list(broadcast_indices[-1])
+        child_expand_indices = list(products.broadcast_indices[-1])
         child_expand_indices[swap_i], child_expand_indices[swap_j] = \
             child_expand_indices[swap_j], child_expand_indices[swap_i]
         child_values = child_values[tuple(child_expand_indices)]
 
-        joined_values = self._join_fun(invar_values, neighborhood_values)
-        covariants = self._covariants(
-            products.covariants, positions, broadcast_indices,
-            products.values, joined_values)
+        joined_values = self._join_fun(child_values, invar_values, products.values)
+        covariants = self._covariants(products.summary.covariants)
         new_values = covariants*self.scale_net(joined_values)
 
         scores = self.score_net(joined_values)
         old_shape = self.math.shape(scores)
 
-        scores = self._mask_scores(scores, broadcast_indices, mask)
+        scores = self._mask_scores(scores, products.broadcast_indices, mask)
 
         attention, output = self._calculate_attention(
             scores, new_values, old_shape)
 
         return self.OutputType(
-            attention, output, invariants, invar_values, new_values)
+            attention, output, products.summary.invariants, invar_values, new_values)
 
-    def _expand_products(self, rs, vs):
-        products = super()._expand_products(rs, vs)
+    def _get_product_summary(self, inputs):
+        products = super()._get_product_summary(inputs)
         broadcast_indices = []
         for idx in products.broadcast_indices:
             idx = list(idx)
@@ -51,8 +47,13 @@ class LabeledVectorAttention:
             broadcast_indices.append(idx)
 
         index = tuple([Ellipsis, None] + (self.rank + 1)*[slice(None)])
-        invars = products.invariants[index]
-        covars = products.covariants[index]
-        new_vs = [v[index] for v in products.values]
+        invars = products.summary.invariants[index]
+        covars = [r[index] for r in products.summary.covariants]
+        new_vs = products.values[index]
+        if isinstance(products.weights, int):
+            weights = products.weights
+        else:
+            weights = products.weights[index]
 
-        return self.ExpandedProducts(broadcast_indices, invars, covars, new_vs)
+        summary = products.summary._replace(invariants=invars, covariants=covars)
+        return self.ProductSummaryType(summary, broadcast_indices, weights, new_vs)
