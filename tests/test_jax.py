@@ -38,7 +38,8 @@ class JaxTests(AllTests, unittest.TestCase):
         return net((r, v))
 
     @functools.lru_cache(maxsize=2)
-    def get_vector_layer(self, key=None):
+    def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single', covar_mode='single'):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -59,12 +60,17 @@ class JaxTests(AllTests, unittest.TestCase):
             )
 
         result_init, result_raw = Vector2VectorAttention(
-            score, value, scale).layer_functions
+            score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode,
+            covariant_mode=covar_mode).layer_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
-    def vector_prediction(self, r, v, key=None):
-        net = self.get_vector_layer(key)
+    def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                          join_fun='mean', invar_mode='single',
+                          covar_mode='single'):
+        net = self.get_vector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
         return net((r, v))
 
     @functools.lru_cache(maxsize=2)

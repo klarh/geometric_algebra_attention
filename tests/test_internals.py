@@ -65,22 +65,32 @@ class AllTests:
         prediction1 = self.value_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode)
         prediction2 = self.value_prediction(rprime, v, key, rank, merge_fun, join_fun, invar_mode)
 
-        npt.assert_allclose(prediction1 - prediction2, 0, atol=5e-4)
+        delta = max(1e-3, np.mean(np.square(v)))
+        npt.assert_allclose(prediction1 - prediction2, 0, atol=1e-2*delta)
 
     @settings(deadline=None)
     @given(
         unit_quaternions(),
-        point_cloud())
-    def test_rotation_covariance_vector(self, q, rv):
+        point_cloud(),
+        hs.integers(1, 3),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(INVARIANT_MODES),
+        hs.sampled_from(INVARIANT_MODES))
+    def test_rotation_covariance_vector(self, q, rv, rank, merge_fun, join_fun,
+                                        invar_mode, covar_mode):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_covariance'
-        prediction1 = self.vector_prediction(r, v, key)
+        prediction1 = self.vector_prediction(
+            r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
         prediction1_prime = rowan.rotate(q[None], prediction1)
-        prediction2 = self.vector_prediction(rprime, v, key)
+        prediction2 = self.vector_prediction(
+            rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
 
-        npt.assert_allclose(prediction1_prime - prediction2, 0, atol=1e-4)
+        delta = max(1e-3, np.mean(np.square(r)))
+        npt.assert_allclose(prediction1_prime - prediction2, 0, atol=1e-2*delta)
 
     @settings(deadline=None)
     @given(

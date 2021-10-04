@@ -35,15 +35,17 @@ class PytorchTests(AllTests, unittest.TestCase):
         return net.forward((r, v)).detach().numpy()
 
     @functools.lru_cache(maxsize=2)
-    def get_vector_layer(self, key=None):
+    def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single', covar_mode='single'):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
             pt.nn.Linear(2*self.DIM, 1)
         )
 
+        invar_dims = VectorAttention.get_invariant_dims(rank, invar_mode)
         value = pt.nn.Sequential(
-            pt.nn.Linear(2, 2*self.DIM),
+            pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
             pt.nn.Linear(2*self.DIM, self.DIM)
         )
@@ -54,11 +56,15 @@ class PytorchTests(AllTests, unittest.TestCase):
             pt.nn.Linear(2*self.DIM, 1)
         )
 
-        return Vector2VectorAttention(self.DIM, score, value, scale)
+        return Vector2VectorAttention(
+            self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode)
 
-    def vector_prediction(self, r, v, key=None):
+    def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                          join_fun='mean', invar_mode='single', covar_mode='single'):
         r, v = map(pt.as_tensor, (r, v))
-        net = self.get_vector_layer(key)
+        net = self.get_vector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
         return net.forward((r, v)).detach().numpy()
 
     @functools.lru_cache(maxsize=2)

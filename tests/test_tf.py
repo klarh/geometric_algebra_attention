@@ -32,7 +32,8 @@ class TensorflowTests(AllTests, unittest.TestCase):
         return net((r, v))
 
     @functools.lru_cache(maxsize=2)
-    def get_vector_layer(self, key=None):
+    def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single', covar_mode='single'):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -48,10 +49,14 @@ class TensorflowTests(AllTests, unittest.TestCase):
             keras.layers.Dense(1)
         ])
 
-        return Vector2VectorAttention(self.DIM, score, value, scale)
+        return Vector2VectorAttention(
+            self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode)
 
-    def vector_prediction(self, r, v, key=None):
-        net = self.get_vector_layer(key)
+    def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                          join_fun='mean', invar_mode='single', covar_mode='single'):
+        net = self.get_vector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
         return net((r, v))
 
     @functools.lru_cache(maxsize=2)
