@@ -11,7 +11,8 @@ from test_internals import AllTests
 
 class JaxTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
-    def get_value_layer(self, key=None):
+    def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single'):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -25,13 +26,15 @@ class JaxTests(AllTests, unittest.TestCase):
             Dense(self.DIM)
             )
 
-        result_init, result_raw = VectorAttention(score, value).layer_functions
+        result_init, result_raw = VectorAttention(
+            score, value, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode).layer_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
-    def value_prediction(self, r, v, key=None):
-        rng = jax.random.PRNGKey(13)
-        net = self.get_value_layer(key)
+    def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                         join_fun='mean', invar_mode='single'):
+        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode)
         return net((r, v))
 
     @functools.lru_cache(maxsize=2)
@@ -61,7 +64,6 @@ class JaxTests(AllTests, unittest.TestCase):
         return functools.partial(result_raw, result_params)
 
     def vector_prediction(self, r, v, key=None):
-        rng = jax.random.PRNGKey(13)
         net = self.get_vector_layer(key)
         return net((r, v))
 
@@ -92,7 +94,6 @@ class JaxTests(AllTests, unittest.TestCase):
         return functools.partial(result_raw, result_params)
 
     def label_vector_prediction(self, r, v, v2, key=None):
-        rng = jax.random.PRNGKey(13)
         net = self.get_label_vector_layer(key)
         return net((v2, (r, v)))
 

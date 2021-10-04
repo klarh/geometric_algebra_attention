@@ -10,24 +10,28 @@ from test_internals import AllTests
 
 class PytorchTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
-    def get_value_layer(self, key=None):
+    def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single'):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
             pt.nn.Linear(2*self.DIM, 1)
         )
 
+        invar_dims = VectorAttention.get_invariant_dims(rank, invar_mode)
         value = pt.nn.Sequential(
-            pt.nn.Linear(2, 2*self.DIM),
+            pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
             pt.nn.Linear(2*self.DIM, self.DIM)
         )
 
-        return VectorAttention(self.DIM, score, value)
+        return VectorAttention(self.DIM, score, value, rank=rank, merge_fun=merge_fun,
+                               join_fun=join_fun, invariant_mode=invar_mode)
 
-    def value_prediction(self, r, v, key=None):
+    def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                         join_fun='mean', invar_mode='single'):
         r, v = map(pt.as_tensor, (r, v))
-        net = self.get_value_layer(key)
+        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode)
         return net.forward((r, v)).detach().numpy()
 
     @functools.lru_cache(maxsize=2)

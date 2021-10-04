@@ -11,7 +11,8 @@ from test_internals import AllTests
 
 class KerasTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
-    def get_value_layer(self, key=None):
+    def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single'):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -22,11 +23,12 @@ class KerasTests(AllTests, unittest.TestCase):
             keras.layers.Dense(self.DIM)
         ])
 
-        return VectorAttention(score, value)
+        return VectorAttention(score, value, rank=rank, merge_fun=merge_fun,
+                               join_fun=join_fun, invariant_mode=invar_mode)
 
-    @tf.function
-    def value_prediction(self, r, v, key=None):
-        net = self.get_value_layer(key)
+    def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                         join_fun='mean', invar_mode='single'):
+        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode)
         return net((r, v))
 
     @functools.lru_cache(maxsize=2)
@@ -48,7 +50,6 @@ class KerasTests(AllTests, unittest.TestCase):
 
         return Vector2VectorAttention(score, value, scale)
 
-    @tf.function
     def vector_prediction(self, r, v, key=None):
         net = self.get_vector_layer(key)
         return net((r, v))
@@ -72,7 +73,6 @@ class KerasTests(AllTests, unittest.TestCase):
 
         return LabeledVectorAttention(score, value, scale)
 
-    @tf.function
     def label_vector_prediction(self, r, v, v2, key=None):
         net = self.get_label_vector_layer(key)
         return net((v2, (r, v)))

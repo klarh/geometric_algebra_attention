@@ -1,5 +1,6 @@
 import collections
 import itertools
+import math
 
 class VectorAttention:
     """Calculates geometric product attention.
@@ -56,9 +57,9 @@ class VectorAttention:
     @staticmethod
     def get_invariant_dims(rank, invariant_mode):
         if invariant_mode == 'full':
-            return self.rank**2
+            return rank**2
         elif invariant_mode == 'partial':
-            return 2*self.rank - 1
+            return 2*rank - 1
         return 1 if rank == 1 else 2
 
     @property
@@ -69,15 +70,15 @@ class VectorAttention:
         result = self.WeightDefinitionSet({}, {})
 
         if self.merge_fun == 'concat':
-            stdev = self.math.sqrt(2./self.rank/n_dim)
-            result.groups['merge_kernels'] = [WeightDefinition(
+            stdev = math.sqrt(2./self.rank/n_dim)
+            result.groups['merge_kernels'] = [self.WeightDefinition(
                 'merge_kernel_{}'.format(i), (n_dim, n_dim), stdev)
                                        for i in range(self.rank)]
 
         if self.join_fun == 'concat':
             # always joining neighborhood values and invariant values
-            stdev = self.math.sqrt(2./2/n_dim)
-            result.groups['join_kernels'] = [WeightDefinition(
+            stdev = math.sqrt(2./2/n_dim)
+            result.groups['join_kernels'] = [self.WeightDefinition(
                 'join_kernel_{}'.format(i), (n_dim, n_dim), stdev)
                                       for i in range(2)]
 
@@ -171,7 +172,15 @@ class VectorAttention:
         else:
             rank = self.rank
             products = all_products[0].products
-            invariants = self.math.concat([p.invariants for p in all_products], axis=-1)
+            # this is suboptimal; basically just a workaround to abuse
+            # broadcasting rules rather than having to deal with the
+            # lack of simplicity when dealing with array shapes and
+            # concat not automatically broadcasting for the user
+            reshape_zeros = self.math.zeros_like(all_products[0].invariants[..., :1])
+            # TODO replace this with a more efficient implementation
+            # (split + broadcast_to + concat?)
+            bcast_invars = [p.invariants + reshape_zeros for p in all_products]
+            invariants = self.math.concat(bcast_invars, axis=-1)
             summary = self.ProductType(rank, products, invariants, covariants)
 
         vs = [inp.values[index] for (inp, index) in zip(inputs, broadcast_indices)]

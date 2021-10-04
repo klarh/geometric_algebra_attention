@@ -28,6 +28,7 @@ class VectorAttention(base.VectorAttention, pt.nn.Module):
         sum=keepdims_decorator(pt.sum),
         tensordot=pt.tensordot,
         where=pt.where,
+        zeros_like=pt.zeros_like,
     )
 
     def __init__(self, n_dim, *args, **kwargs):

@@ -8,6 +8,10 @@ from hypothesis.extra import numpy as hnp
 
 DIM = 8
 
+INVARIANT_MODES = ['full', 'partial', 'single']
+
+MERGE_MODES = ['mean', 'concat']
+
 finite_dtype = hnp.from_dtype(
     np.dtype('float32'), min_value=-4, max_value=4,
     allow_nan=False, allow_infinity=False)
@@ -48,16 +52,20 @@ class AllTests:
     @settings(deadline=None)
     @given(
         unit_quaternions(),
-        point_cloud())
-    def test_rotation_invariance_value(self, q, rv):
+        point_cloud(),
+        hs.integers(1, 3),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(INVARIANT_MODES))
+    def test_rotation_invariance_value(self, q, rv, rank, merge_fun, join_fun, invar_mode):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_invariance'
-        prediction1 = self.value_prediction(r, v, key)
-        prediction2 = self.value_prediction(rprime, v, key)
+        prediction1 = self.value_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode)
+        prediction2 = self.value_prediction(rprime, v, key, rank, merge_fun, join_fun, invar_mode)
 
-        npt.assert_allclose(prediction1 - prediction2, 0, atol=1e-4)
+        npt.assert_allclose(prediction1 - prediction2, 0, atol=5e-4)
 
     @settings(deadline=None)
     @given(

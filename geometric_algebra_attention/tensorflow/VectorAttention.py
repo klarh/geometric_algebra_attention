@@ -21,6 +21,7 @@ class VectorAttention(base.VectorAttention):
         sum=tf.reduce_sum,
         tensordot=tf.tensordot,
         where=tf.where,
+        zeros_like=tf.zeros_like,
     )
 
     def __init__(self, n_dim, *args, **kwargs):

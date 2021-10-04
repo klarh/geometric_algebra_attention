@@ -28,6 +28,7 @@ class VectorAttention(base.VectorAttention):
         sum=jnp.sum,
         tensordot=jnp.tensordot,
         where=jnp.where,
+        zeros_like=jnp.zeros_like,
     )
 
     @property
@@ -84,7 +85,7 @@ class VectorAttention(base.VectorAttention):
     @property
     def params(self):
         result = {}
-        weight_sets = self._build_weight_definitions(None)
+        weight_sets = self._build_weight_definitions(self.n_dim)
         for name in weight_sets.groups:
             result[name] = getattr(self, name)
         for name in weight_sets.singles:
