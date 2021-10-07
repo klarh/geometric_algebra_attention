@@ -29,6 +29,7 @@ setup(name='geometric_algebra_attention',
       long_description_content_type='text/markdown',
       packages=[
           'geometric_algebra_attention',
+          'geometric_algebra_attention.base',
           'geometric_algebra_attention.jax',
           'geometric_algebra_attention.keras',
           'geometric_algebra_attention.pytorch',
