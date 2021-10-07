@@ -61,3 +61,22 @@ class VectorAttention(base.VectorAttention, keras.layers.Layer):
             return self.math.any(position_mask, axis=-1)
         else:
             return self.math.any(value_mask, axis=-1)
+
+    @classmethod
+    def from_config(cls, config):
+        new_config = dict(config)
+        for key in ('score_net', 'value_net'):
+            new_config[key] = keras.models.Sequential.from_config(new_config[key])
+        return cls(**new_config)
+
+    def get_config(self):
+        result = super().get_config()
+        result['score_net'] = self.score_net.get_config()
+        result['value_net'] = self.value_net.get_config()
+        result['reduce'] = self.reduce
+        result['merge_fun'] = self.merge_fun
+        result['join_fun'] = self.join_fun
+        result['rank'] = self.rank
+        result['invariant_mode'] = self.invariant_mode
+        result['covariant_mode'] = self.covariant_mode
+        return result
