@@ -36,8 +36,8 @@ class VectorAttention(base.VectorAttention):
         return self.init_fun, self.apply_fun
 
     def init_fun(self, rng, input_shape):
-        input_shapes = self._parse_inputs(input_shape)
-        self.n_dim = input_shapes[0].values[-1]
+        v_shape = input_shape[1]
+        self.n_dim = v_shape[-1]
 
         rng, next_rng = jax.random.split(rng)
         _, self.score_net_params = self.score_net_init(next_rng, (self.n_dim,))
