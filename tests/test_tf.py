@@ -12,7 +12,7 @@ from test_internals import AllTests
 class TensorflowTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single'):
+                         invar_mode='single', reduce=True):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -24,12 +24,12 @@ class TensorflowTests(AllTests, unittest.TestCase):
         ])
 
         return VectorAttention(self.DIM, score, value, rank=rank, merge_fun=merge_fun,
-                               join_fun=join_fun, invariant_mode=invar_mode)
+                               join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
 
     def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                         join_fun='mean', invar_mode='single'):
-        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode)
-        return net((r, v))
+                         join_fun='mean', invar_mode='single', reduce=True):
+        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+        return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
@@ -57,7 +57,7 @@ class TensorflowTests(AllTests, unittest.TestCase):
                           join_fun='mean', invar_mode='single', covar_mode='single'):
         net = self.get_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode)
-        return net((r, v))
+        return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_label_vector_layer(self, key=None):
@@ -80,7 +80,7 @@ class TensorflowTests(AllTests, unittest.TestCase):
 
     def label_vector_prediction(self, r, v, v2, key=None):
         net = self.get_label_vector_layer(key)
-        return net((v2, (r, v)))
+        return net((v2, (r, v))).numpy()
 
 if __name__ == '__main__':
     unittest.main()

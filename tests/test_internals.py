@@ -65,8 +65,38 @@ class AllTests:
         prediction1 = self.value_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode)
         prediction2 = self.value_prediction(rprime, v, key, rank, merge_fun, join_fun, invar_mode)
 
+        self.assertEqual(v[0].shape, prediction1.shape)
         delta = max(1e-3, np.mean(np.square(v)))
-        npt.assert_allclose(prediction1 - prediction2, 0, atol=1e-2*delta)
+        npt.assert_allclose(prediction1 - prediction2, 0, atol=1e-1*delta)
+
+    @settings(deadline=None)
+    @given(
+        point_cloud(),
+        hs.integers(0, 128),
+        hs.integers(0, 128),
+        hs.integers(1, 3),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(INVARIANT_MODES))
+    def test_permutation_equivariance_value(self, rv, swap_i, swap_j, rank, merge_fun, join_fun, invar_mode):
+        r, v = rv
+        swap_i = swap_i%len(r)
+        swap_j = swap_j%len(r)
+        rprime, vprime = r.copy(), v.copy()
+        rprime[swap_i], rprime[swap_j] = r[swap_j], r[swap_i]
+        vprime[swap_i], vprime[swap_j] = v[swap_j], v[swap_i]
+
+        key = 'permutation_equivariance'
+        prediction1 = self.value_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode, reduce=False)
+        prediction2 = self.value_prediction(rprime, vprime, key, rank, merge_fun, join_fun, invar_mode, reduce=False)
+
+        self.assertEqual(v.shape, prediction1.shape)
+        temp = prediction2[swap_i].copy()
+        prediction2[swap_i] = prediction2[swap_j]
+        prediction2[swap_j] = temp
+
+        delta = max(1e-3, np.mean(np.square(v)))
+        npt.assert_allclose(prediction1 - prediction2, 0, atol=1e-1*delta)
 
     @settings(deadline=None)
     @given(
@@ -90,7 +120,7 @@ class AllTests:
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
 
         delta = max(1e-3, np.mean(np.square(r)))
-        npt.assert_allclose(prediction1_prime - prediction2, 0, atol=1e-2*delta)
+        npt.assert_allclose(prediction1_prime - prediction2, 0, atol=1e-1*delta)
 
     @settings(deadline=None)
     @given(
