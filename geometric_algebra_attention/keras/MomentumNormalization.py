@@ -17,6 +17,7 @@ class MomentumNormalization(keras.layers.Layer):
         self.epsilon = epsilon
         self.use_mean = use_mean
         self.use_std = use_std
+        self.supports_masking = True
         super().__init__(*args, **kwargs)
 
     def build(self, input_shape):
@@ -27,18 +28,25 @@ class MomentumNormalization(keras.layers.Layer):
         self.sigma = self.add_weight(
             name='sigma', shape=shape, initializer='ones', trainable=False)
 
-    def call(self, inputs, training=False):
+    def call(self, inputs, training=False, mask=None):
         if training:
             axes = range(len(inputs.shape) - 1)
-            mean = tf.math.reduce_mean(inputs, axis=axes, keepdims=False)
-            std = tf.math.reduce_std(inputs, axis=axes, keepdims=False)
+            if mask is not None:
+                values = tf.ragged.boolean_mask(inputs, mask=mask)
+            else:
+                values = inputs
+            mean = tf.math.reduce_mean(values, axis=axes, keepdims=False)
+            std = tf.math.reduce_std(values, axis=axes, keepdims=False)
             self.mu.assign(self.momentum*self.mu + (1 - self.momentum)*mean)
             self.sigma.assign(self.momentum*self.sigma + (1 - self.momentum)*std)
 
         mu = self.mu*tf.cast(self.use_mean, tf.float32)
         use_std = tf.cast(self.use_std, tf.float32)
         denominator = use_std*(self.sigma + self.epsilon) + (1 - use_std)*1.
-        return (inputs - mu)/denominator
+        result = (inputs - mu)/denominator
+        if mask is not None:
+            return tf.where(mask, result, inputs)
+        return result
 
     def get_config(self):
         result = super().get_config()
