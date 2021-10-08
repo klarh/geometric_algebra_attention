@@ -57,7 +57,10 @@ class VectorAttention(base.VectorAttention, pt.nn.Module):
         shape = list(old_shape[:dims]) + [old_shape[dims:].numel()]
         scores = self.math.reshape(scores, shape)
         attention = self.math.reshape(self.math.softmax(scores, -1), old_shape)
-        output = self.math.sum(attention*values, reduce_axes)
+        if reduce_axes:
+            output = self.math.sum(attention*values, reduce_axes)
+        else:
+            output = attention*values
 
         return attention, output
 
