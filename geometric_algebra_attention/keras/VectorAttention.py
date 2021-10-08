@@ -55,8 +55,8 @@ class VectorAttention(base.VectorAttention, keras.layers.Layer):
             return mask
 
         parsed_mask = self._parse_inputs(mask)
-        position_mask = parsed_mask.positions
-        value_mask = parsed_mask.values
+        position_mask = parsed_mask[0].positions
+        value_mask = parsed_mask[0].values
         if position_mask is not None:
             return self.math.any(position_mask, axis=-1)
         else:

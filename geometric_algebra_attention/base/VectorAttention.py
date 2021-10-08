@@ -2,6 +2,8 @@ import collections
 import itertools
 import math
 
+HUGE_FLOAT = 1e9
+
 class VectorAttention:
     """Calculates geometric product attention.
 
@@ -228,14 +230,14 @@ class VectorAttention:
                 masks = [p.positions[..., None][idx]
                          for (p, idx) in zip(parsed_mask, broadcast_indices)
                          if p.positions is not None]
-                position_mask = self.math.all(masks, axis=0)
+                position_mask = sum(masks) == len(masks)
             else:
                 position_mask = True
             if any(p.values is not None for p in parsed_mask):
                 masks = [p.values[..., None][idx]
                          for (p, idx) in zip(parsed_mask, broadcast_indices)
                          if p.values is not None]
-                value_mask = self.math.all(masks, axis=0)
+                value_mask = sum(masks) == len(masks)
             else:
                 value_mask = True
             product_mask = self.math.logical_and(position_mask, value_mask)
