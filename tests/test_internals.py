@@ -115,7 +115,7 @@ class AllTests:
         key = 'rotation_covariance'
         prediction1 = self.vector_prediction(
             r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
-        prediction1_prime = rowan.rotate(q[None], prediction1)
+        prediction1_prime = rowan.rotate(q, prediction1)
         prediction2 = self.vector_prediction(
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
 
