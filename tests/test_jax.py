@@ -29,14 +29,14 @@ class JaxTests(AllTests, unittest.TestCase):
 
         result_init, result_raw = VectorAttention(
             score, value, rank=rank, reduce=reduce, merge_fun=merge_fun,
-            join_fun=join_fun, invariant_mode=invar_mode).layer_functions
+            join_fun=join_fun, invariant_mode=invar_mode).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
                          join_fun='mean', invar_mode='single', reduce=True):
         net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
-        return np.asarray(net((r, v)))
+        return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
@@ -63,7 +63,7 @@ class JaxTests(AllTests, unittest.TestCase):
         result_init, result_raw = Vector2VectorAttention(
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
-            covariant_mode=covar_mode).layer_functions
+            covariant_mode=covar_mode).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
@@ -72,7 +72,7 @@ class JaxTests(AllTests, unittest.TestCase):
                           covar_mode='single'):
         net = self.get_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode)
-        return np.asarray(net((r, v)))
+        return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)
     def get_label_vector_layer(self, key=None):
@@ -96,13 +96,13 @@ class JaxTests(AllTests, unittest.TestCase):
             )
 
         result_init, result_raw = LabeledVectorAttention(
-            score, value, scale).layer_functions
+            score, value, scale).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def label_vector_prediction(self, r, v, v2, key=None):
         net = self.get_label_vector_layer(key)
-        return np.asarray(net((v2, (r, v))))
+        return np.asarray(net((v2, (r, v)))).copy()
 
 if __name__ == '__main__':
     unittest.main()
