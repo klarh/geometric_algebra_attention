@@ -32,10 +32,10 @@ class VectorAttention(base.VectorAttention):
     )
 
     @property
-    def layer_functions(self):
-        return self.init_fun, self.apply_fun
+    def stax_functions(self):
+        return self.stax_init, self.stax_apply
 
-    def init_fun(self, rng, input_shape):
+    def stax_init(self, rng, input_shape):
         v_shape = input_shape[1]
         self.n_dim = v_shape[-1]
 
@@ -66,7 +66,7 @@ class VectorAttention(base.VectorAttention):
 
         return input_shape, self.params
 
-    def apply_fun(self, params, inputs, rng=None):
+    def stax_apply(self, params, inputs, rng=None):
         self.params = params
         result = self._evaluate(inputs)
         return result.output

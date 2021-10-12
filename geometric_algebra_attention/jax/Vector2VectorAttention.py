@@ -18,8 +18,8 @@ class Vector2VectorAttention(base.Vector2VectorAttention, VectorAttention):
             invariant_mode=invariant_mode, covariant_mode=covariant_mode,
             **kwargs)
 
-    def init_fun(self, rng, input_shape):
-        super().init_fun(rng, input_shape)
+    def stax_init(self, rng, input_shape):
+        super().stax_init(rng, input_shape)
 
         rng, next_rng = jax.random.split(rng)
         _, self.scale_net_params = self.scale_net_init(next_rng, (self.n_dim,))
