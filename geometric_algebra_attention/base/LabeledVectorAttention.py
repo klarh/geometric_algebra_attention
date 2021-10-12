@@ -1,5 +1,24 @@
 
 class LabeledVectorAttention:
+    """Use labels to translate one point cloud to another.
+
+    This layer calculates a new point cloud from a set of reference
+    point cloud values and coordinates, and a query set of point cloud
+    values. It produces one point corresponding to each query label
+    (`reduce=True`) or one point cloud, corresponding to each
+    reference point, for each query label (`reduce=False`).
+
+    :param score_net: function producing logits for the attention mechanism
+    :param value_net: function producing values in the embedding dimension of the network
+    :param scale_net: function producing a scalar rescaling value for the vectors produced by the network
+    :param reduce: if `True`, produce a permutation-invariant result; otherwise, produce a permutation-covariant result
+    :param merge_fun: Function used to merge the input values of each tuple before being passed to `join_fun`: 'mean' (no parameters) or 'concat' (learned projection for each tuple position)
+    :param join_fun: Function used to join the representations of the rotation-invariant quantities (produced by `value_net`) and the tuple summary (produced by `merge_fun`): 'mean' (no parameters) or 'concat' (learned projection for each representation)
+    :param rank: Degree of correlations to consider. 2 for pairwise attention, 3 for triplet-wise attention, and so on. Memory and computational complexity scales as `N**rank`
+    :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
+    :param covariant_mode: Type of rotation-covariant quantities to use in the output calculation. 'single' (use only the vectors produced by the final geometric product), 'partial' (use all vectors for intermediate steps along the path of building the final geometric product), or 'full' (calculate the full set of vectors for the tuple)
+
+    """
     def _build_weight_definitions(self, n_dim):
         result = super()._build_weight_definitions(n_dim)
 

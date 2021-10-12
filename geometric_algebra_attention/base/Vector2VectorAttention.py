@@ -1,5 +1,26 @@
 
 class Vector2VectorAttention:
+    """Calculate rotation-covariant (vector-valued) geometric product attention.
+
+    This layer implements a set of geometric products over all tuples
+    of length `rank`, then sums over them using an attention mechanism
+    to perform a permutation-covariant (`reduce=False`) or
+    permutation-invariant (`reduce=True`) result.
+
+    The resulting value is a (geometric) vector, and will rotate in
+    accordance to the input vectors of the layer.
+
+    :param score_net: function producing logits for the attention mechanism
+    :param value_net: function producing values in the embedding dimension of the network
+    :param scale_net: function producing a scalar rescaling value for the vectors produced by the network
+    :param reduce: if `True`, produce a permutation-invariant result; otherwise, produce a permutation-covariant result
+    :param merge_fun: Function used to merge the input values of each tuple before being passed to `join_fun`: 'mean' (no parameters) or 'concat' (learned projection for each tuple position)
+    :param join_fun: Function used to join the representations of the rotation-invariant quantities (produced by `value_net`) and the tuple summary (produced by `merge_fun`): 'mean' (no parameters) or 'concat' (learned projection for each representation)
+    :param rank: Degree of correlations to consider. 2 for pairwise attention, 3 for triplet-wise attention, and so on. Memory and computational complexity scales as `N**rank`
+    :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
+    :param covariant_mode: Type of rotation-covariant quantities to use in the output calculation. 'single' (use only the vectors produced by the final geometric product), 'partial' (use all vectors for intermediate steps along the path of building the final geometric product), or 'full' (calculate the full set of vectors for the tuple)
+
+    """
     def __init__(self, scale_net):
         self.scale_net = scale_net
 
