@@ -81,7 +81,7 @@ class AllTests:
         if len(x) > 2:
             corrcoef = np.corrcoef(x, y)[0, 1]
             if np.isfinite(corrcoef):
-                self.assertGreater(corrcoef, .9)
+                self.assertGreater(corrcoef, .7)
 
     @settings(deadline=None)
     @given(
@@ -125,7 +125,7 @@ class AllTests:
         if len(x) > 2:
             corrcoef = np.corrcoef(x, y)[0, 1]
             if np.isfinite(corrcoef):
-                self.assertGreater(corrcoef, .9)
+                self.assertGreater(corrcoef, .7)
 
     @settings(deadline=None)
     @given(
@@ -159,7 +159,7 @@ class AllTests:
         if len(x) > 2:
             corrcoef = np.corrcoef(x, y)[0, 1]
             if np.isfinite(corrcoef):
-                self.assertGreater(corrcoef, .9)
+                self.assertGreater(corrcoef, .7)
 
     @settings(deadline=None)
     @given(
@@ -187,4 +187,4 @@ class AllTests:
         if len(x) > 2:
             corrcoef = np.corrcoef(x, y)[0, 1]
             if np.isfinite(corrcoef):
-                self.assertGreater(corrcoef, .9)
+                self.assertGreater(corrcoef, .7)
