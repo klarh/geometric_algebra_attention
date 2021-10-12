@@ -85,14 +85,20 @@ class AllTests:
 
     @settings(deadline=None)
     @given(
-        point_cloud(),
         hs.integers(0, 128),
         hs.integers(0, 128),
         hs.integers(1, 3),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(INVARIANT_MODES))
-    def test_permutation_equivariance_value(self, rv, swap_i, swap_j, rank, merge_fun, join_fun, invar_mode):
+    def test_permutation_equivariance_value(self, swap_i, swap_j, rank, merge_fun, join_fun, invar_mode):
+        np.random.seed(13)
+        r = np.random.normal(size=(7, 3)).astype(np.float32)
+        r /= np.linalg.norm(r, axis=-1, keepdims=True)
+        v = np.zeros((r.shape[0], self.DIM), dtype=np.float32)
+        v[:, 0] = np.arange(len(r))
+        rv = r, v
+
         errs = []
         for scale in FLOAT_SCALES:
             r, v = rv; r = r*scale; v = v*scale
@@ -152,8 +158,6 @@ class AllTests:
         x, y = x[filt], y[filt]
         if len(x) > 2:
             corrcoef = np.corrcoef(x, y)[0, 1]
-            if corrcoef < .9:
-                print(x, y, corrcoef)
             if np.isfinite(corrcoef):
                 self.assertGreater(corrcoef, .9)
 
