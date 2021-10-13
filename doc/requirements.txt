@@ -1,4 +1,4 @@
-jax
+jax[cpu]
 tensorflow
 torch
 m2r2
