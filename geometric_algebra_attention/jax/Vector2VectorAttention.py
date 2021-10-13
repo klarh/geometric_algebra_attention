@@ -6,6 +6,8 @@ from .. import base
 from .VectorAttention import VectorAttention
 
 class Vector2VectorAttention(base.Vector2VectorAttention, VectorAttention):
+    __doc__ = base.Vector2VectorAttention.__doc__
+
     def __init__(self, score_net, value_net, scale_net, reduce=True,
                  merge_fun='mean', join_fun='mean', rank=2,
                  invariant_mode='single', covariant_mode='partial',
@@ -39,6 +41,11 @@ class Vector2VectorAttention(base.Vector2VectorAttention, VectorAttention):
 
     @property
     def scale_net(self):
+        """Get and set the parameters for the scale-generating function.
+
+        See the main jax module documentation for more details about
+        these functions.
+        """
         return functools.partial(self.scale_net_fn, self.scale_net_params)
 
     @scale_net.setter

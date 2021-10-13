@@ -5,6 +5,8 @@ from .. import base
 from ..tensorflow.VectorAttention import VectorAttention as TFAttention
 
 class VectorAttention(base.VectorAttention, keras.layers.Layer):
+    __doc__ = base.VectorAttention.__doc__
+
     algebra = TFAttention.algebra
 
     math = TFAttention.math
@@ -19,6 +21,7 @@ class VectorAttention(base.VectorAttention, keras.layers.Layer):
             invariant_mode, covariant_mode)
 
     def build(self, input_shape):
+        """Store the shape of weights given the shape of a set of input values."""
         n_dim = input_shape[1][-1]
         weight_sets = self._build_weight_definitions(n_dim)
         for (name, defs) in weight_sets.groups.items():
@@ -38,6 +41,7 @@ class VectorAttention(base.VectorAttention, keras.layers.Layer):
             setattr(self, name, weight)
 
     def call(self, inputs, return_invariants=False, return_attention=False, mask=None):
+        """Evaluate the geometric algebra attention calculation for this layer."""
         intermediates = self._evaluate(inputs, mask)
         result = [intermediates.output]
         if return_invariants:
@@ -51,6 +55,7 @@ class VectorAttention(base.VectorAttention, keras.layers.Layer):
             return result[0]
 
     def compute_mask(self, inputs, mask=None):
+        """Calculate the output mask of this layer given input shapes and masks."""
         if not self.reduce or mask is None:
             return mask
 

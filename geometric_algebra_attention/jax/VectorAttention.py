@@ -11,6 +11,8 @@ from .. import base
 from . import geometric_algebra
 
 class VectorAttention(base.VectorAttention):
+    __doc__ = base.VectorAttention.__doc__
+
     algebra = geometric_algebra
 
     math = base.Namespace(
@@ -33,9 +35,11 @@ class VectorAttention(base.VectorAttention):
 
     @property
     def stax_functions(self):
+        """Returns the operations of this layer in the API of stax."""
         return self.stax_init, self.stax_apply
 
     def stax_init(self, rng, input_shape):
+        """Initialize the parameters of this layer."""
         v_shape = input_shape[1]
         self.n_dim = v_shape[-1]
 
@@ -67,6 +71,7 @@ class VectorAttention(base.VectorAttention):
         return input_shape, self.params
 
     def stax_apply(self, params, inputs, rng=None):
+        """Apply the operation of this layer, given a set of layer parameters."""
         self.params = params
         result = self._evaluate(inputs)
         return result.output
@@ -84,6 +89,7 @@ class VectorAttention(base.VectorAttention):
 
     @property
     def params(self):
+        """Get and set the parameters of this layer."""
         result = {}
         weight_sets = self._build_weight_definitions(self.n_dim)
         for name in weight_sets.groups:
@@ -101,6 +107,11 @@ class VectorAttention(base.VectorAttention):
 
     @property
     def score_net(self):
+        """Get and set the parameters for the score-generating function.
+
+        See the main jax module documentation for more details about
+        these functions.
+        """
         return functools.partial(self.score_net_fn, self.score_net_params)
 
     @score_net.setter
@@ -109,6 +120,11 @@ class VectorAttention(base.VectorAttention):
 
     @property
     def value_net(self):
+        """Get and set the parameters for the value-generating function.
+
+        See the main jax module documentation for more details about
+        these functions.
+        """
         return functools.partial(self.value_net_fn, self.value_net_params)
 
     @value_net.setter

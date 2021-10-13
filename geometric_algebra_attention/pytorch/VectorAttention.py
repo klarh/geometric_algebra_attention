@@ -11,6 +11,8 @@ def keepdims_decorator(f):
     return wrapped
 
 class VectorAttention(base.VectorAttention, pt.nn.Module):
+    __doc__ = base.VectorAttention.__doc__
+
     algebra = geometric_algebra
 
     math = base.Namespace(
@@ -41,6 +43,7 @@ class VectorAttention(base.VectorAttention, pt.nn.Module):
             self.init()
 
     def init(self):
+        """Initialize the weights for this layer."""
         weight_sets = self._build_weight_definitions(self.n_dim)
         for (name, defs) in weight_sets.groups.items():
             weights = pt.nn.ParameterList([
@@ -65,4 +68,5 @@ class VectorAttention(base.VectorAttention, pt.nn.Module):
         return attention, output
 
     def forward(self, inputs):
+        """Evaluate the attention calculation for this layer."""
         return self._evaluate(inputs).output

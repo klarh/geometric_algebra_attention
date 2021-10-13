@@ -4,6 +4,8 @@ from .. import base
 from . import geometric_algebra
 
 class VectorAttention(base.VectorAttention):
+    __doc__ = base.VectorAttention.__doc__
+
     algebra = geometric_algebra
 
     math = base.Namespace(
@@ -44,6 +46,7 @@ class VectorAttention(base.VectorAttention):
             setattr(self, name, weight)
 
     def __call__(self, inputs, return_attention=False):
+        """Evaluate the attention calculation for this layer."""
         intermediates = self._evaluate(inputs)
         result = [intermediates.output]
 

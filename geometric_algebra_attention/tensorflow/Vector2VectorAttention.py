@@ -3,6 +3,8 @@ from .. import base
 from .VectorAttention import VectorAttention
 
 class Vector2VectorAttention(base.Vector2VectorAttention, VectorAttention):
+    __doc__ = base.Vector2VectorAttention.__doc__
+
     def __init__(self, n_dim, score_net, value_net, scale_net, reduce=True,
                  merge_fun='mean', join_fun='mean', rank=2,
                  invariant_mode='single', covariant_mode='partial',
