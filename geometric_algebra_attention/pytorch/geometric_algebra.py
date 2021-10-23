@@ -15,7 +15,7 @@ def bivec_dual(b):
         [0, 0, 1, 0],
         [0, -1, 0, 0],
         [1, 0, 0, 0]
-    ], dtype=b.dtype)
+    ], dtype=b.dtype, device=b.device).detach()
     return pt.tensordot(b, swizzle, 1)
 
 def vecvec(a, b):
@@ -43,7 +43,7 @@ def vecvec(a, b):
         [0, 0, -1, 0],
         [0, 0, 0, -1],
         [1, 0, 0, 0],
-    ], dtype=products.dtype)
+    ], dtype=products.dtype, device=products.device).detach()
     return pt.tensordot(products, swizzle, 1)
 
 def vecvec_invariants(p):
@@ -94,7 +94,7 @@ def bivecvec(p, c):
         [0, 0, 0, 1],
         [0, 0, -1, 0],
         [0, 1, 0, 0],
-    ], dtype=products.dtype)
+    ], dtype=products.dtype, device=products.device).detach()
     return pt.tensordot(products, swizzle, 1)
 
 def bivecvec_invariants(q):
@@ -144,7 +144,7 @@ def trivecvec(q, d):
         [0, 0, 0, 1],
         [0, 0, -1, 0],
         [0, 1, 0, 0],
-    ], dtype=products.dtype)
+    ], dtype=products.dtype, device=b.device).detach()
     return pt.tensordot(products, swizzle, 1)
 
 trivecvec_invariants = vecvec_invariants
