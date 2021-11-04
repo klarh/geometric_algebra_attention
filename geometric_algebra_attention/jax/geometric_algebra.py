@@ -2,8 +2,18 @@
 import jax
 import jax.numpy as jnp
 
+@jax.custom_jvp
 def custom_norm(x):
     return jnp.linalg.norm(x, axis=-1, keepdims=True)
+
+@custom_norm.defjvp
+def custom_norm_jvp(primals, tangents):
+    (x,) = primals
+    (x_dot,) = tangents
+
+    y = custom_norm(x)
+    y_dot = jnp.sum(x_dot*x, axis=-1, keepdims=True)/(y + 1e-19)
+    return y, y_dot
 
 def bivec_dual(b):
     """scalar + bivector -> vector + trivector
