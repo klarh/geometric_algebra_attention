@@ -5,4 +5,6 @@ from .Vector2VectorAttention import Vector2VectorAttention
 class LabeledVectorAttention(base.LabeledVectorAttention, Vector2VectorAttention):
     __doc__ = base.LabeledVectorAttention.__doc__
 
-    pass
+    def build(self, input_shape):
+        modified_shape = input_shape[1]
+        return super().build(modified_shape)
