@@ -1,3 +1,4 @@
+import math
 
 class LabeledVectorAttention:
     """Use labels to translate one point cloud to another.
@@ -23,7 +24,7 @@ class LabeledVectorAttention:
         result = super()._build_weight_definitions(n_dim)
 
         if self.join_fun == 'concat':
-            stdev = self.math.sqrt(2./3./n_dim)
+            stdev = math.sqrt(2./3./n_dim)
             result.groups['join_kernels'].append(self.WeightDefinition(
                 'join_kernel_2', [n_dim, n_dim], stdev))
 
