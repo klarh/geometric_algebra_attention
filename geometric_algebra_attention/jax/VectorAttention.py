@@ -68,7 +68,7 @@ class VectorAttention(base.VectorAttention):
             weight = jax.random.normal(rng, shape=def_.shape)/def_.stdev
             setattr(self, name, weight)
 
-        return input_shape, self.params
+        return v_shape, self.params
 
     def stax_apply(self, params, inputs, rng=None):
         """Apply the operation of this layer, given a set of layer parameters."""
