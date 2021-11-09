@@ -60,12 +60,12 @@ class VectorAttention(base.VectorAttention):
         weight_sets = self._build_weight_definitions(self.n_dim)
         for (name, defs) in weight_sets.groups.items():
             weights = [
-                jax.random.normal(rng, shape=def_.shape)/def_.stdev
+                jax.random.normal(rng, shape=def_.shape)*def_.stdev
                 for (def_, rng) in zip(defs, rngs(rng))]
             setattr(self, name, weights)
 
         for ((name, def_), rng) in zip(weight_sets.singles.items(), rngs(rng_singles)):
-            weight = jax.random.normal(rng, shape=def_.shape)/def_.stdev
+            weight = jax.random.normal(rng, shape=def_.shape)*def_.stdev
             setattr(self, name, weight)
 
         return v_shape, self.params
