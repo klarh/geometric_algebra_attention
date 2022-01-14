@@ -144,7 +144,7 @@ def trivecvec(q, d):
         [0, 0, 0, 1],
         [0, 0, -1, 0],
         [0, 1, 0, 0],
-    ], dtype=products.dtype, device=b.device).detach()
+    ], dtype=products.dtype, device=q.device).detach()
     return pt.tensordot(products, swizzle, 1)
 
 trivecvec_invariants = vecvec_invariants
