@@ -2,11 +2,26 @@
 import functools
 import unittest
 
+import hypothesis
 import torch as pt
 from geometric_algebra_attention.pytorch import (
     VectorAttention, Vector2VectorAttention, LabeledVectorAttention)
 
 from test_internals import AllTests
+
+@hypothesis.register_random
+class TorchRandom:
+    @staticmethod
+    def seed(seed):
+        pt.random.manual_seed(seed)
+
+    @staticmethod
+    def getstate():
+        return pt.random.get_rng_state()
+
+    @staticmethod
+    def setstate(state):
+        pt.random.set_rng_state(state)
 
 class PytorchTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)

@@ -2,12 +2,15 @@
 import functools
 import unittest
 
+import hypothesis
 import tensorflow as tf
 from tensorflow import keras
 from geometric_algebra_attention.tensorflow import (
     VectorAttention, Vector2VectorAttention, LabeledVectorAttention)
 
-from test_internals import AllTests
+from test_internals import AllTests, TFRandom
+
+hypothesis.register_random(TFRandom)
 
 class TensorflowTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
