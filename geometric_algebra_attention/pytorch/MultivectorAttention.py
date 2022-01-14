@@ -4,14 +4,14 @@ from .. import base
 from . import geometric_algebra
 from .internal import AttentionBase
 
-class VectorAttention(AttentionBase, base.VectorAttention, pt.nn.Module):
-    __doc__ = base.VectorAttention.__doc__
+class MultivectorAttention(AttentionBase, base.MultivectorAttention, pt.nn.Module):
+    __doc__ = base.MultivectorAttention.__doc__
 
     def __init__(self, n_dim, *args, **kwargs):
         pt.nn.Module.__init__(self)
-        base.VectorAttention.__init__(self, *args, **kwargs)
+        base.MultivectorAttention.__init__(self, *args, **kwargs)
 
         self.n_dim = n_dim
 
-        if type(self) == VectorAttention:
+        if type(self) == MultivectorAttention:
             self.init()

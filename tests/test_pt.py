@@ -5,7 +5,8 @@ import unittest
 import hypothesis
 import torch as pt
 from geometric_algebra_attention.pytorch import (
-    VectorAttention, Vector2VectorAttention, LabeledVectorAttention)
+    MultivectorAttention, VectorAttention, Vector2Multivector,
+    Vector2VectorAttention, LabeledVectorAttention)
 
 from test_internals import AllTests
 
@@ -47,6 +48,35 @@ class PytorchTests(AllTests, unittest.TestCase):
                          join_fun='mean', invar_mode='single', reduce=True):
         r, v = map(pt.as_tensor, (r, v))
         net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+        return net.forward((r, v)).detach().numpy()
+
+    @functools.lru_cache(maxsize=2)
+    def get_value_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', reduce=True):
+        score = pt.nn.Sequential(
+            pt.nn.Linear(self.DIM, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, 1)
+        )
+
+        invar_dims = MultivectorAttention.get_invariant_dims(rank, invar_mode)
+        value = pt.nn.Sequential(
+            pt.nn.Linear(invar_dims, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, self.DIM)
+        )
+
+        return MultivectorAttention(
+            self.DIM, score, value, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
+
+    def value_multivector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                         join_fun='mean', invar_mode='single', reduce=True):
+        r, v = map(pt.as_tensor, (r, v))
+        r = Vector2Multivector().forward(r)
+        net = self.get_value_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, reduce)
         return net.forward((r, v)).detach().numpy()
 
     @functools.lru_cache(maxsize=2)

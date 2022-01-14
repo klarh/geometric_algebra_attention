@@ -6,7 +6,8 @@ import jax
 from jax.experimental.stax import serial, Dense, Relu
 import numpy as np
 from geometric_algebra_attention.jax import (
-    VectorAttention, Vector2VectorAttention, LabeledVectorAttention)
+    MultivectorAttention, VectorAttention, Vector2Multivector,
+    Vector2VectorAttention, LabeledVectorAttention)
 
 from test_internals import AllTests
 
@@ -36,6 +37,37 @@ class JaxTests(AllTests, unittest.TestCase):
     def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
                          join_fun='mean', invar_mode='single', reduce=True):
         net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+        return np.asarray(net((r, v))).copy()
+
+    @functools.lru_cache(maxsize=2)
+    def get_value_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', reduce=True):
+        rng = jax.random.PRNGKey(13)
+        score = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(1)
+            )
+
+        value = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(self.DIM)
+            )
+
+        result_init, result_raw = MultivectorAttention(
+            score, value, rank=rank, reduce=reduce, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode).stax_functions
+        _, result_params = result_init(rng, (None, (self.DIM,)))
+        return functools.partial(result_raw, result_params)
+
+    def value_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', reduce=True):
+        r = Vector2Multivector()(r)
+        net = self.get_value_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, reduce)
         return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)

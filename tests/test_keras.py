@@ -6,7 +6,8 @@ import hypothesis
 import tensorflow as tf
 from tensorflow import keras
 from geometric_algebra_attention.keras import (
-    VectorAttention, Vector2VectorAttention, LabeledVectorAttention)
+    MultivectorAttention, VectorAttention, Vector2Multivector,
+    Vector2VectorAttention, LabeledVectorAttention)
 
 from test_internals import AllTests, TFRandom
 
@@ -32,6 +33,31 @@ class KerasTests(AllTests, unittest.TestCase):
     def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
                          join_fun='mean', invar_mode='single', reduce=True):
         net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+        return net((r, v)).numpy()
+
+    @functools.lru_cache(maxsize=2)
+    def get_value_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', reduce=True):
+        score = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        value = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(self.DIM)
+        ])
+
+        return MultivectorAttention(
+            score, value, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
+
+    def value_multivector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                         join_fun='mean', invar_mode='single', reduce=True):
+        r = Vector2Multivector()(r)
+        net = self.get_value_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, reduce)
         return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
