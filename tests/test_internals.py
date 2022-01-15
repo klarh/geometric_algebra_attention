@@ -177,13 +177,6 @@ class AllTests:
         prediction2 = self.vector_prediction(
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
 
-        if np.max(np.linalg.norm(prediction2, axis=-1)) > 1e2:
-            print('---')
-            print(r)
-            print(v)
-            print(prediction1_prime)
-            print(prediction2)
-            print(np.max(np.square(prediction1_prime - prediction2)))
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
