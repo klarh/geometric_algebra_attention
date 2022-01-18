@@ -1,6 +1,8 @@
 
 from .LabeledVectorAttention import LabeledVectorAttention
 from .MultivectorAttention import MultivectorAttention
+from .Multivector2MultivectorAttention import Multivector2MultivectorAttention
+from .Multivector2Vector import Multivector2Vector
 from .MomentumNormalization import MomentumNormalization
 from .VectorAttention import VectorAttention
 from .Vector2Multivector import Vector2Multivector

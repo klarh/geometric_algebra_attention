@@ -5,9 +5,7 @@ import unittest
 import hypothesis
 import tensorflow as tf
 from tensorflow import keras
-from geometric_algebra_attention.tensorflow import (
-    MultivectorAttention, VectorAttention, Vector2Multivector,
-    Vector2VectorAttention, LabeledVectorAttention)
+from geometric_algebra_attention import tensorflow as gala
 
 from test_internals import AllTests, TFRandom
 
@@ -27,7 +25,7 @@ class TensorflowTests(AllTests, unittest.TestCase):
             keras.layers.Dense(self.DIM)
         ])
 
-        return VectorAttention(self.DIM, score, value, rank=rank, merge_fun=merge_fun,
+        return gala.VectorAttention(self.DIM, score, value, rank=rank, merge_fun=merge_fun,
                                join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
 
     def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
@@ -49,14 +47,14 @@ class TensorflowTests(AllTests, unittest.TestCase):
             keras.layers.Dense(self.DIM)
         ])
 
-        return MultivectorAttention(
+        return gala.MultivectorAttention(
             self.DIM, score, value, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
 
     def value_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', reduce=True):
-        r = Vector2Multivector()(r)
+        r = gala.Vector2Multivector()(r)
         net = self.get_value_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, reduce)
         return net((r, v)).numpy()
@@ -79,7 +77,7 @@ class TensorflowTests(AllTests, unittest.TestCase):
             keras.layers.Dense(1)
         ])
 
-        return Vector2VectorAttention(
+        return gala.Vector2VectorAttention(
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode)
 
@@ -88,6 +86,35 @@ class TensorflowTests(AllTests, unittest.TestCase):
         net = self.get_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode)
         return net((r, v)).numpy()
+
+    @functools.lru_cache(maxsize=2)
+    def get_vector_multivector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+                         invar_mode='single', covar_mode='single'):
+        score = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        value = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(self.DIM)
+        ])
+
+        scale = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        return gala.Multivector2MultivectorAttention(
+            self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode)
+
+    def vector_multivector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
+                          join_fun='mean', invar_mode='single', covar_mode='single'):
+        r = gala.Vector2Multivector()(r)
+        net = self.get_vector_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+        return gala.Multivector2Vector()(net((r, v))).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_label_vector_layer(self, key=None):
@@ -106,7 +133,7 @@ class TensorflowTests(AllTests, unittest.TestCase):
             keras.layers.Dense(1)
         ])
 
-        return LabeledVectorAttention(self.DIM, score, value, scale)
+        return gala.LabeledVectorAttention(self.DIM, score, value, scale)
 
     def label_vector_prediction(self, r, v, v2, key=None):
         net = self.get_label_vector_layer(key)
