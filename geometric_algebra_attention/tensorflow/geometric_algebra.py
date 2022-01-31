@@ -7,7 +7,8 @@ def custom_norm(x):
     y = tf.linalg.norm(x, axis=-1, keepdims=True)
 
     def grad(dy):
-        return dy * (x / (y + 1e-19))
+        y = custom_norm(x)
+        return dy * (x / tf.maximum(y, 1e-19))
 
     return y, grad
 
