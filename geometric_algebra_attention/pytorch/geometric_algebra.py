@@ -1,7 +1,20 @@
 import torch as pt
 
-def custom_norm(x):
-    return pt.linalg.norm(x, axis=-1, keepdims=True)
+class CustomNorm(pt.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        ctx.save_for_backward(x)
+        result = pt.linalg.norm(x, axis=-1, keepdims=True)
+        return result
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        (x,) = ctx.saved_tensors
+        y = custom_norm(x)
+        eps = pt.as_tensor(1e-19, dtype=x.dtype, device=x.device)
+        return grad_output * (x / pt.maximum(y, eps))
+
+custom_norm = CustomNorm.apply
 
 def bivec_dual(b):
     """scalar + bivector -> vector + trivector
