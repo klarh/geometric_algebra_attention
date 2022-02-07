@@ -1,3 +1,4 @@
+from tensorflow import keras
 
 from .. import base
 from .VectorAttention import VectorAttention
