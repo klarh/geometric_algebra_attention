@@ -10,6 +10,7 @@ scores, values, and scaling factors:
 """
 
 from . import geometric_algebra
+from .LabeledMultivectorAttention import LabeledMultivectorAttention
 from .LabeledVectorAttention import LabeledVectorAttention
 from .MultivectorAttention import MultivectorAttention
 from .Multivector2MultivectorAttention import Multivector2MultivectorAttention

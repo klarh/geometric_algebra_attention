@@ -32,3 +32,6 @@ Multivector-input functions
 
 .. autoclass:: Multivector2Vector
    :members:
+
+.. autoclass:: LabeledMultivectorAttention
+   :members:
