@@ -10,7 +10,12 @@ class AttentionBase:
 
     def build(self, input_shape):
         """Store the shape of weights given the shape of a set of input values."""
-        n_dim = input_shape[1][-1]
+        # scenario 1: inputs are [(x1, v1), (x2, v2, w2), ...]
+        try:
+            n_dim = input_shape[0][1][-1]
+        except TypeError:
+        # scenario 2: inputs are (x, v) or (x, v, w)
+            n_dim = input_shape[1][-1]
         weight_sets = self._build_weight_definitions(n_dim)
         for (name, defs) in weight_sets.groups.items():
             weights = [
