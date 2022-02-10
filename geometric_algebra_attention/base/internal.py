@@ -117,9 +117,9 @@ class AttentionBase:
 
     def _get_broadcast_indices(self):
         broadcast_indices = []
-        for i in range(1, self.rank + 1):
+        for i in range(self.rank):
             index = [Ellipsis] + [None]*(self.rank) + [slice(None)]
-            index[-i - 1] = slice(None)
+            index[i - self.rank - 1] = slice(None)
             broadcast_indices.append(tuple(index))
         return broadcast_indices
 
@@ -269,8 +269,8 @@ class LabeledAttentionBase:
         products = self._get_product_summary(parsed_inputs)
         invar_values = self.value_net(products.summary.invariants)
 
-        swap_i = -self.rank - 1
-        swap_j = swap_i - 1
+        swap_i = -self.rank - 2
+        swap_j = -2
         child_expand_indices = list(products.broadcast_indices[-1])
         child_expand_indices[swap_i], child_expand_indices[swap_j] = \
             child_expand_indices[swap_j], child_expand_indices[swap_i]
