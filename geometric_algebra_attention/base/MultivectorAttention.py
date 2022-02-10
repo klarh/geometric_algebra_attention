@@ -31,7 +31,7 @@ class MultivectorAttention(AttentionBase):
                 rank += 1
                 product = product_fn(product, right)
                 invar = self.algebra.mvecmvec_invariants(product)
-                covar = self.algebra.mvecmvec_covariants(product)
+                covar = product
                 series.append(self.ProductType(rank, product, invar, covar))
             series = list(reversed(series))
             if start == 0:
