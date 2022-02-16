@@ -35,6 +35,10 @@ setup(name='geometric_algebra_attention',
           'geometric_algebra_attention.pytorch',
           'geometric_algebra_attention.tensorflow',
       ],
+      project_urls={
+          'Documentation': 'http://geometric_algebra_attention.readthedocs.io/',
+          'Source': 'https://github.com/klarh/geometric_algebra_attention',
+          },
       python_requires='>=3',
       version=__version__
       )
