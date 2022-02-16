@@ -171,5 +171,36 @@ class JaxTests(AllTests, unittest.TestCase):
         net = self.get_label_vector_layer(key)
         return np.asarray(net((v2, (r, v)))).copy()
 
+    @functools.lru_cache(maxsize=2)
+    def get_label_multivector_layer(self, key=None):
+        rng = jax.random.PRNGKey(13)
+        score = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(1)
+            )
+
+        value = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(self.DIM)
+            )
+
+        scale = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(1)
+            )
+
+        result_init, result_raw = gala.LabeledMultivectorAttention(
+            score, value, scale).stax_functions
+        _, result_params = result_init(rng, (None, (self.DIM,)))
+        return functools.partial(result_raw, result_params)
+
+    def label_multivector_prediction(self, r, v, v2, key=None):
+        net = self.get_label_multivector_layer(key)
+        r = gala.Vector2Multivector()(r)
+        return gala.Multivector2Vector()(np.asarray(net((v2, (r, v))))).copy()
+
 if __name__ == '__main__':
     unittest.main()

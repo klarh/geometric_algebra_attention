@@ -139,5 +139,29 @@ class KerasTests(AllTests, unittest.TestCase):
         net = self.get_label_vector_layer(key)
         return net((v2, (r, v))).numpy()
 
+    @functools.lru_cache(maxsize=2)
+    def get_label_multivector_layer(self, key=None):
+        score = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        value = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(self.DIM)
+        ])
+
+        scale = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        return gala.LabeledMultivectorAttention(score, value, scale)
+
+    def label_multivector_prediction(self, r, v, v2, key=None):
+        r = gala.Vector2Multivector()(r)
+        net = self.get_label_multivector_layer(key)
+        return gala.Multivector2Vector()(net((v2, (r, v)))).numpy()
+
 if __name__ == '__main__':
     unittest.main()

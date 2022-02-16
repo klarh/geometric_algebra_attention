@@ -222,6 +222,24 @@ class AllTests:
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
+    @settings(deadline=None)
+    @given(
+        unit_quaternions(),
+        point_cloud(),
+        point_cloud())
+    def test_rotation_covariance_label_multivector(self, q, rv, rv2):
+        r, v = rv
+        v2 = rv2[1]
+        rprime = rowan.rotate(q[None], r).astype(np.float32)
+
+        key = 'rotation_covariance_label'
+        prediction1 = self.label_multivector_prediction(r, v, v2, key)
+        prediction1_prime = rowan.rotate(q[None], prediction1)
+        prediction2 = self.label_multivector_prediction(rprime, v, v2, key)
+
+        err = np.max(np.square(prediction1_prime - prediction2))
+        self.assertLess(err, 1e-5)
+
 class TFRandom:
     @staticmethod
     def seed(seed):

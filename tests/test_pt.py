@@ -172,5 +172,34 @@ class PytorchTests(AllTests, unittest.TestCase):
         net = self.get_label_vector_layer(key)
         return net.forward((v2, (r, v))).detach().numpy()
 
+    @functools.lru_cache(maxsize=2)
+    def get_label_multivector_layer(self, key=None):
+        score = pt.nn.Sequential(
+            pt.nn.Linear(self.DIM, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, 1)
+        )
+
+        invar_dims = gala.LabeledMultivectorAttention.get_invariant_dims(2, 'single')
+        value = pt.nn.Sequential(
+            pt.nn.Linear(invar_dims, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, self.DIM)
+        )
+
+        scale = pt.nn.Sequential(
+            pt.nn.Linear(self.DIM, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, 1)
+        )
+
+        return gala.LabeledMultivectorAttention(self.DIM, score, value, scale)
+
+    def label_multivector_prediction(self, r, v, v2, key=None):
+        r, v, v2 = map(pt.as_tensor, (r, v, v2))
+        r = gala.Vector2Multivector().forward(r)
+        net = self.get_label_multivector_layer(key)
+        return gala.Multivector2Vector()(net.forward((v2, (r, v)))).detach().numpy()
+
 if __name__ == '__main__':
     unittest.main()
