@@ -69,6 +69,7 @@ class AttentionBase:
     def stax_apply(self, params, inputs, rng=None):
         """Apply the operation of this layer, given a set of layer parameters."""
         self.params = params
+        self._last_rng = rng
         result = self._evaluate(inputs)
         return result.output
 
@@ -108,7 +109,11 @@ class AttentionBase:
         See the main jax module documentation for more details about
         these functions.
         """
-        return functools.partial(self.score_net_fn, self.score_net_params)
+        kwargs = {}
+        if getattr(self, '_last_rng', None) is not None:
+            mixin = functools.reduce(operator.mul, map(int, 'score'.encode()))
+            kwargs['rng'] = jax.random.fold_in(self._last_rng, mixin)
+        return functools.partial(self.score_net_fn, self.score_net_params, **kwargs)
 
     @score_net.setter
     def score_net(self, value):
@@ -121,7 +126,11 @@ class AttentionBase:
         See the main jax module documentation for more details about
         these functions.
         """
-        return functools.partial(self.value_net_fn, self.value_net_params)
+        kwargs = {}
+        if getattr(self, '_last_rng', None) is not None:
+            mixin = functools.reduce(operator.mul, map(int, 'value'.encode()))
+            kwargs['rng'] = jax.random.fold_in(self._last_rng, mixin)
+        return functools.partial(self.value_net_fn, self.value_net_params, **kwargs)
 
     @value_net.setter
     def value_net(self, value):

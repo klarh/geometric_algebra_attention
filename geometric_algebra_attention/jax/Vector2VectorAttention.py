@@ -1,4 +1,5 @@
 import functools
+import operator
 
 import jax
 
@@ -46,7 +47,11 @@ class Vector2VectorAttention(base.Vector2VectorAttention, VectorAttention):
         See the main jax module documentation for more details about
         these functions.
         """
-        return functools.partial(self.scale_net_fn, self.scale_net_params)
+        kwargs = {}
+        if getattr(self, '_last_rng', None) is not None:
+            mixin = functools.reduce(operator.mul, map(int, 'scale'.encode()))
+            kwargs['rng'] = jax.random.fold_in(self._last_rng, mixin)
+        return functools.partial(self.scale_net_fn, self.scale_net_params, **kwargs)
 
     @scale_net.setter
     def scale_net(self, value):

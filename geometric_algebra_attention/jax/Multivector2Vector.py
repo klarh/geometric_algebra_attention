@@ -9,7 +9,7 @@ class Multivector2Vector(base.Multivector2Vector):
         return input_shape, []
 
     @classmethod
-    def stax_apply(cls, params, inputs):
+    def stax_apply(cls, params, inputs, rng=None):
         return cls._evaluate(inputs)
 
     @property
