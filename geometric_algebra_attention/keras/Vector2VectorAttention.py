@@ -28,3 +28,5 @@ class Vector2VectorAttention(base.Vector2VectorAttention, VectorAttention):
         result = super().get_config()
         result['scale_net'] = self.scale_net.get_config()
         return result
+
+keras.utils.get_custom_objects()['Vector2VectorAttention'] = Vector2VectorAttention

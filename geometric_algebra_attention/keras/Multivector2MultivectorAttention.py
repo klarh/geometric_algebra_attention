@@ -28,3 +28,5 @@ class Multivector2MultivectorAttention(base.Multivector2MultivectorAttention, Mu
         result = super().get_config()
         result['scale_net'] = self.scale_net.get_config()
         return result
+
+keras.utils.get_custom_objects()['Multivector2MultivectorAttention'] = Multivector2MultivectorAttention

@@ -11,3 +11,5 @@ class Vector2Multivector(base.Vector2Multivector, keras.layers.Layer):
 
     def call(self, inputs, mask=None):
         return self._evaluate(inputs)
+
+keras.utils.get_custom_objects()['Vector2Multivector'] = Vector2Multivector

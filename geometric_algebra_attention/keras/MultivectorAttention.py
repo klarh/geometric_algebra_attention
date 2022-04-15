@@ -16,3 +16,5 @@ class MultivectorAttention(
         base.MultivectorAttention.__init__(
             self, score_net, value_net, reduce, merge_fun, join_fun, rank,
             invariant_mode, covariant_mode)
+
+keras.utils.get_custom_objects()['MultivectorAttention'] = MultivectorAttention

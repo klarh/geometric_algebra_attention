@@ -55,3 +55,5 @@ class MomentumNormalization(keras.layers.Layer):
         result['use_mean'] = self.use_mean
         result['use_std'] = self.use_std
         return result
+
+keras.utils.get_custom_objects()['MomentumNormalization'] = MomentumNormalization
