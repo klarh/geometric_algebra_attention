@@ -8,12 +8,15 @@ class VectorAttention(AttentionBase):
     __doc__ = AttentionBase.__doc__
 
     @staticmethod
-    def get_invariant_dims(rank, invariant_mode):
+    def get_invariant_dims(rank, invariant_mode, include_normalized_products=False):
+        result = 1 if rank == 1 else 2
         if invariant_mode == 'full':
-            return rank**2
+            result = rank**2
         elif invariant_mode == 'partial':
-            return 2*rank - 1
-        return 1 if rank == 1 else 2
+            result = 2*rank - 1
+        if include_normalized_products:
+            result *= 2
+        return result
 
     def _get_products(self, inputs):
         broadcast_indices = self._get_broadcast_indices()
@@ -48,5 +51,19 @@ class VectorAttention(AttentionBase):
                 result['single'] = [series[0]]
                 result['partial'] = list(series)
             result['full'].extend(series)
+
+        if self.include_normalized_products:
+            for (key, series) in result.items():
+                normalized_series = []
+                for product in series:
+                    norm = self.algebra.custom_norm(product.products)
+                    normalization = self.math.clip(norm, 1e-7, math.inf)
+                    scaling = 1.0/normalization
+                    normalized_product = product._replace(
+                        products=product.products*scaling,
+                        invariants=product.invariants*scaling,
+                        covariants=product.covariants*scaling)
+                    normalized_series.append(normalized_product)
+                series.extend(normalized_series)
 
         return result, broadcast_indices

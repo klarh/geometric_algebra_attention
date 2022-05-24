@@ -61,7 +61,8 @@ class KerasTests(AllTests, unittest.TestCase):
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', covar_mode='single'):
+                         invar_mode='single', covar_mode='single',
+                         include_normalized_products=False):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -79,17 +80,20 @@ class KerasTests(AllTests, unittest.TestCase):
 
         return gala.Vector2VectorAttention(
             score, value, scale, rank=rank, merge_fun=merge_fun,
-            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode)
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products)
 
     def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                          join_fun='mean', invar_mode='single', covar_mode='single'):
+                          join_fun='mean', invar_mode='single', covar_mode='single',
+                          include_normalized_products=False):
         net = self.get_vector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
         return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
-    def get_vector_multivector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', covar_mode='single'):
+    def get_vector_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', covar_mode='single', include_normalized_products=False):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -107,13 +111,16 @@ class KerasTests(AllTests, unittest.TestCase):
 
         return gala.Multivector2MultivectorAttention(
             score, value, scale, rank=rank, merge_fun=merge_fun,
-            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode)
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products)
 
-    def vector_multivector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                          join_fun='mean', invar_mode='single', covar_mode='single'):
+    def vector_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', covar_mode='single',
+            include_normalized_products=False):
         r = gala.Vector2Multivector()(r)
         net = self.get_vector_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
         return gala.Multivector2Vector()(net((r, v))).numpy()
 
     @functools.lru_cache(maxsize=2)

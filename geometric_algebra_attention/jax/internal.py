@@ -15,6 +15,7 @@ class AttentionBase:
         all=jnp.all,
         any=jnp.any,
         asarray=jnp.asarray,
+        clip=jnp.clip,
         concat=jnp.concatenate,
         logical_and=jnp.logical_and,
         pow=jnp.power,

@@ -77,4 +77,5 @@ class AttentionBase:
         result['rank'] = self.rank
         result['invariant_mode'] = self.invariant_mode
         result['covariant_mode'] = self.covariant_mode
+        result['include_normalized_products'] = self.include_normalized_products
         return result

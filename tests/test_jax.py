@@ -70,7 +70,8 @@ class JaxTests(AllTests, unittest.TestCase):
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', covar_mode='single'):
+                         invar_mode='single', covar_mode='single',
+                         include_normalized_products=False):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -93,20 +94,22 @@ class JaxTests(AllTests, unittest.TestCase):
         result_init, result_raw = gala.Vector2VectorAttention(
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
-            covariant_mode=covar_mode).stax_functions
+            covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
                           join_fun='mean', invar_mode='single',
-                          covar_mode='single'):
+                          covar_mode='single', include_normalized_products=False):
         net = self.get_vector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
         return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)
-    def get_vector_multivector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', covar_mode='single'):
+    def get_vector_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', covar_mode='single', include_normalized_products=False):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -129,16 +132,18 @@ class JaxTests(AllTests, unittest.TestCase):
         result_init, result_raw = gala.Multivector2MultivectorAttention(
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
-            covariant_mode=covar_mode).stax_functions
+            covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
-    def vector_multivector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                          join_fun='mean', invar_mode='single',
-                          covar_mode='single'):
+    def vector_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single',
+            covar_mode='single', include_normalized_products=False):
         r = gala.Vector2Multivector()(r)
         net = self.get_vector_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
         return gala.Multivector2Vector()(np.asarray(net((r, v)))).copy()
 
     @functools.lru_cache(maxsize=2)

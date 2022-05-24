@@ -17,6 +17,7 @@ class AttentionBase:
         all=pt.all,
         any=pt.any,
         asarray=pt.as_tensor,
+        clip=pt.clip,
         concat=pt.cat,
         logical_and=pt.logical_and,
         pow=pt.pow,

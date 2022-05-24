@@ -24,6 +24,7 @@ class AttentionBase:
     :param join_fun: Function used to join the representations of the rotation-invariant quantities (produced by `value_net`) and the tuple summary (produced by `merge_fun`): 'mean' (no parameters) or 'concat' (learned projection for each representation)
     :param rank: Degree of correlations to consider. 2 for pairwise attention, 3 for triplet-wise attention, and so on. Memory and computational complexity scales as `N**rank`
     :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
+    :param include_normalized_products: If True, for whatever set of products that will be computed (for a given `invariant_mode`), also include the normalized multivector for each product
 
     """
 
@@ -48,7 +49,8 @@ class AttentionBase:
 
     def __init__(self, score_net, value_net, reduce=True,
                  merge_fun='mean', join_fun='mean', rank=2,
-                 invariant_mode='single', covariant_mode='single'):
+                 invariant_mode='single', covariant_mode='single',
+                 include_normalized_products=False):
         self.score_net = score_net
         self.value_net = value_net
         self.reduce = reduce
@@ -57,13 +59,15 @@ class AttentionBase:
         self.rank = rank
         self.invariant_mode = invariant_mode
         self.covariant_mode = covariant_mode
+        self.include_normalized_products = include_normalized_products
 
         for mode in [invariant_mode, covariant_mode]:
             assert mode in ['full', 'partial', 'single']
 
     @property
     def invariant_dims(self):
-        return self.get_invariant_dims(self.rank, self.invariant_mode)
+        return self.get_invariant_dims(
+            self.rank, self.invariant_mode, self.include_normalized_products)
 
     def _build_weight_definitions(self, n_dim):
         result = self.WeightDefinitionSet({}, {})
@@ -251,6 +255,7 @@ class LabeledAttentionBase:
     :param rank: Degree of correlations to consider. 2 for pairwise attention, 3 for triplet-wise attention, and so on. Memory and computational complexity scales as `N**rank`
     :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
     :param covariant_mode: Type of rotation-covariant quantities to use in the output calculation. 'single' (use only the vectors produced by the final geometric product), 'partial' (use all vectors for intermediate steps along the path of building the final geometric product), or 'full' (calculate the full set of vectors for the tuple)
+    :param include_normalized_products: If True, for whatever set of products that will be computed (for a given `invariant_mode`), also include the normalized multivector for each product
 
     """
     def _build_weight_definitions(self, n_dim):

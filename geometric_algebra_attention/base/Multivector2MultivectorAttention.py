@@ -21,6 +21,7 @@ class Multivector2MultivectorAttention:
     :param rank: Degree of correlations to consider. 2 for pairwise attention, 3 for triplet-wise attention, and so on. Memory and computational complexity scales as `N**rank`
     :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
     :param covariant_mode: Type of rotation-covariant quantities to use in the output calculation. 'single' (use only the multivectors produced by the final geometric product), 'partial' (use all multivectors for intermediate steps along the path of building the final geometric product), or 'full' (calculate the full set of multivectors for the tuple)
+    :param include_normalized_products: If True, for whatever set of products that will be computed (for a given `invariant_mode` or `covariant_mode`), also include the normalized multivector for each product
 
     """
     def __init__(self, scale_net):
@@ -28,11 +29,14 @@ class Multivector2MultivectorAttention:
 
     @property
     def input_vector_count(self):
+        result = 1
         if self.covariant_mode == 'full':
-            return self.rank*(self.rank + 1)//2
+            result = self.rank*(self.rank + 1)//2
         elif self.covariant_mode == 'partial':
-            return self.rank
-        return 1
+            result = self.rank
+        if self.include_normalized_products:
+            result *= 2
+        return result
 
     def _build_weight_definitions(self, n_dim):
         result = super()._build_weight_definitions(n_dim)

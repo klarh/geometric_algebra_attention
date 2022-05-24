@@ -10,6 +10,7 @@ class AttentionBase:
         all=tf.reduce_all,
         any=tf.reduce_any,
         asarray=tf.convert_to_tensor,
+        clip=tf.clip_by_value,
         concat=tf.concat,
         logical_and=tf.logical_and,
         pow=tf.pow,

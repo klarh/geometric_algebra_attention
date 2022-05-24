@@ -164,18 +164,23 @@ class AllTests:
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(INVARIANT_MODES),
-        hs.sampled_from(INVARIANT_MODES))
-    def test_rotation_covariance_vector(self, q, rv, rank, merge_fun, join_fun,
-                                        invar_mode, covar_mode):
+        hs.sampled_from(INVARIANT_MODES),
+        hs.booleans(),
+    )
+    def test_rotation_covariance_vector(
+            self, q, rv, rank, merge_fun, join_fun,
+            invar_mode, covar_mode, include_normalized_products):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_covariance'
         prediction1 = self.vector_prediction(
-            r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
         prediction1_prime = rowan.rotate(q, prediction1)
         prediction2 = self.vector_prediction(
-            rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
 
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
@@ -188,18 +193,23 @@ class AllTests:
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(INVARIANT_MODES),
-        hs.sampled_from(INVARIANT_MODES))
-    def test_rotation_covariance_multivector(self, q, rv, rank, merge_fun, join_fun,
-                                        invar_mode, covar_mode):
+        hs.sampled_from(INVARIANT_MODES),
+        hs.booleans()
+    )
+    def test_rotation_covariance_multivector(
+            self, q, rv, rank, merge_fun, join_fun,
+            invar_mode, covar_mode, include_normalized_products):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_covariance'
         prediction1 = self.vector_multivector_prediction(
-            r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
         prediction1_prime = rowan.rotate(q, prediction1)
         prediction2 = self.vector_multivector_prediction(
-            rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode)
+            rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
 
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
