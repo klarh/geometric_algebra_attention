@@ -11,4 +11,12 @@ class LabeledMultivectorAttention(base.LabeledMultivectorAttention, Multivector2
         modified_shape = input_shape[1]
         return super().build(modified_shape)
 
+    def compute_mask(self, inputs, mask=None):
+        """Calculate the output mask of this layer given input shapes and masks."""
+        if mask is None:
+            return mask
+
+        (child_mask, other_mask) = mask
+        return child_mask
+
 keras.utils.get_custom_objects()['LabeledMultivectorAttention'] = LabeledMultivectorAttention

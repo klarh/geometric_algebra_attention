@@ -192,14 +192,14 @@ class AttentionBase:
         if mask is not None:
             parsed_mask = self._parse_inputs(mask)
             if any(p.positions is not None for p in parsed_mask):
-                masks = [p.positions[..., None][idx]
+                masks = [self.math.bool_to_int(p.positions[..., None][idx])
                          for (p, idx) in zip(parsed_mask, broadcast_indices)
                          if p.positions is not None]
                 position_mask = sum(masks) == len(masks)
             else:
                 position_mask = True
             if any(p.values is not None for p in parsed_mask):
-                masks = [p.values[..., None][idx]
+                masks = [self.math.bool_to_int(p.values[..., None][idx])
                          for (p, idx) in zip(parsed_mask, broadcast_indices)
                          if p.values is not None]
                 value_mask = sum(masks) == len(masks)
@@ -315,3 +315,14 @@ class LabeledAttentionBase:
 
         summary = products.summary._replace(invariants=invars, covariants=covars)
         return self.ProductSummaryType(summary, broadcast_indices, weights, new_vs)
+
+    def _mask_scores(self, scores, broadcast_indices, mask):
+        masked_scores = scores
+        if mask is not None:
+            (child_mask, other_mask) = mask
+            masked_scores = AttentionBase._mask_scores(
+                self, scores, broadcast_indices, other_mask)
+            if child_mask is not None:
+                index = tuple([Ellipsis, slice(None)] + (self.rank + 1)*[None])
+                masked_scores = self.math.where(child_mask[index], masked_scores, -HUGE_FLOAT)
+        return masked_scores

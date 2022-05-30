@@ -15,6 +15,7 @@ class AttentionBase:
         all=jnp.all,
         any=jnp.any,
         asarray=jnp.asarray,
+        bool_to_int=lambda x: x.astype(jnp.int8),
         clip=jnp.clip,
         concat=jnp.concatenate,
         logical_and=jnp.logical_and,
