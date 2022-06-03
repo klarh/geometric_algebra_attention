@@ -20,10 +20,12 @@ class Vector2VectorAttention:
     :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
     :param covariant_mode: Type of rotation-covariant quantities to use in the output calculation. 'single' (use only the vectors produced by the final geometric product), 'partial' (use all vectors for intermediate steps along the path of building the final geometric product), or 'full' (calculate the full set of vectors for the tuple)
     :param include_normalized_products: If True, for whatever set of products that will be computed (for a given `invariant_mode` or `covariant_mode`), also include the normalized multivector for each product
+    :param convex_covariants: If True, use a convex combination of the rotation-covariant inputs (including the origin (0, 0, 0)) available, rather than an arbitrary linear combination
 
     """
-    def __init__(self, scale_net):
+    def __init__(self, scale_net, convex_covariants=False):
         self.scale_net = scale_net
+        self.convex_covariants = convex_covariants
 
     @property
     def input_vector_count(self):
@@ -49,8 +51,14 @@ class Vector2VectorAttention:
         if self.input_vector_count == 1:
             return covariants_[0]
 
+        if self.convex_covariants:
+            weights = self.math.concat([self.vector_kernels, [0.]], axis=-1)
+            weights = self.math.softmax(weights)
+        else:
+            weights = self.vector_kernels
+
         covariants = [
-            vec*self.vector_kernels[i] for (i, vec) in enumerate(covariants_)]
+            vec*weights[i] for (i, vec) in enumerate(covariants_)]
         return sum(covariants)
 
     def _evaluate(self, inputs, mask=None):
