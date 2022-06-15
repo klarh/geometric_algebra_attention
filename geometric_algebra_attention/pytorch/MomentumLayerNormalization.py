@@ -9,6 +9,9 @@ class MomentumLayerNormalization(pt.nn.Module):
     Calculates a running average of the L2 norm and scales inputs to
     have length (over the last axis) 1, on average.
 
+    :param momentum: Momentum of moving average, from 0 to 1
+    :param epsilon: Minimum norm for normalization scaling factor
+
     """
 
     def __init__(self, momentum=0.99, epsilon=1e-7):

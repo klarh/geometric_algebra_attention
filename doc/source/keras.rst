@@ -6,6 +6,13 @@ Keras API
 
 .. automodule:: geometric_algebra_attention.keras
 
+Normalization layers
+--------------------
+
+.. autoclass:: MomentumNormalization
+
+.. autoclass:: MomentumLayerNormalization
+
 Vector-input functions
 ----------------------
 

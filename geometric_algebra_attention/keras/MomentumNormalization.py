@@ -10,6 +10,11 @@ class MomentumNormalization(keras.layers.Layer):
     normalizing a vector of real-valued quantities with differing
     units.
 
+    :param momentum: Momentum of moving average, from 0 to 1
+    :param epsilon: Minimum std for normalization scaling factor
+    :param use_mean: If True (default), calculate and apply a mean shift
+    :param use_std: If True (default), calculate and apply a standard deviation scaling factor
+
     """
     def __init__(self, momentum=.99, epsilon=1e-7, use_mean=True,
                  use_std=True, *args, **kwargs):

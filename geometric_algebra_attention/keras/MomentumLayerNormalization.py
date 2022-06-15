@@ -10,6 +10,9 @@ class MomentumLayerNormalization(keras.layers.Layer):
     Calculates a running average of the L2 norm and scales inputs to
     have length (over the last axis) 1, on average.
 
+    :param momentum: Momentum of moving average, from 0 to 1
+    :param epsilon: Minimum norm for normalization scaling factor
+
     """
     def __init__(self, momentum=.99, epsilon=1e-7, *args, **kwargs):
         self.momentum = momentum

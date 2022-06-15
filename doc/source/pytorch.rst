@@ -6,6 +6,13 @@ Pytorch API
 
 .. automodule:: geometric_algebra_attention.pytorch
 
+Normalization layers
+--------------------
+
+.. autoclass:: MomentumNormalization
+
+.. autoclass:: MomentumLayerNormalization
+
 Vector-input functions
 ----------------------
 

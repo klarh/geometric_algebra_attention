@@ -8,6 +8,9 @@ class MomentumNormalization(pt.nn.Module):
     normalizing a vector of real-valued quantities with differing
     units.
 
+    :param n_dim: Last dimension of the layer input
+    :param momentum: Momentum of moving average, from 0 to 1
+
     """
 
     def __init__(self, n_dim, momentum=.99):
