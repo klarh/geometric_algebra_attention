@@ -1,6 +1,6 @@
 
 class Vector2VectorAttention:
-    """Calculate rotation-covariant (vector-valued) geometric product attention.
+    r"""Calculate rotation-covariant (vector-valued) geometric product attention.
 
     This layer implements a set of geometric products over all tuples
     of length `rank`, then sums over them using an attention mechanism
@@ -8,7 +8,22 @@ class Vector2VectorAttention:
     permutation-invariant (`reduce=True`) result.
 
     The resulting value is a (geometric) vector, and will rotate in
-    accordance to the input vectors of the layer.
+    accordance to the input vectors of the layer. The overall
+    attention scheme is similar to :py:class:`VectorAttention` with
+    slight modifications, including a rescaling function
+    :math:`\mathcal{R}` and a set of geometric products :math:`p_n`
+    calculated according to the given `covariant_mode` and learned
+    combination weights :math:`\alpha_n`; consult
+    :py:class:`VectorAttention` for arguments and description of
+    geometric product modes.
+
+    .. math::
+
+        p_{ijk...} &= \vec{r}_i\vec{r}_j\vec{r}_k ... \\
+        q_{ijk...} &= \text{invariants}(p_{ijk...}) \\
+        v_{ijk...} &= \mathcal{J}(\mathcal{V}(q_{ijk...}), \mathcal{M}(v_i, v_j, v_k, ...)) \\
+        w_{ijk...} &= \operatorname*{\text{softmax}}\limits_{jk...}(\mathcal{S}(v_{ijk...})) \\
+        r_i^\prime &= \sum\limits_{jk...} w_{ijk...} \mathcal{R}(v_{ijk...}) \sum\limits_{n \in ijk...} \alpha_n \text{vector}(p_n)
 
     :param score_net: function producing logits for the attention mechanism
     :param value_net: function producing values in the embedding dimension of the network
