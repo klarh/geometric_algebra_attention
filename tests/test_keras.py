@@ -3,11 +3,14 @@ import functools
 import unittest
 
 import hypothesis
+from hypothesis.extra import numpy as hnp
+import numpy as np
+import numpy.testing as npt
 import tensorflow as tf
 from tensorflow import keras
 from geometric_algebra_attention import keras as gala
 
-from test_internals import AllTests, TFRandom
+from test_internals import AllTests, TFRandom, finite_dtype
 
 hypothesis.register_random(TFRandom)
 
@@ -169,6 +172,47 @@ class KerasTests(AllTests, unittest.TestCase):
         r = gala.Vector2Multivector()(r)
         net = self.get_label_multivector_layer(key)
         return gala.Multivector2Vector()(net((v2, (r, v)))).numpy()
+
+    @hypothesis.given(
+        hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
+    def basic_momentum(self, x):
+        hypothesis.assume(np.all(np.abs(x) > 1e-3))
+        hypothesis.assume(len(np.unique(np.round(x, 3))) > 1)
+        hypothesis.assume(x[..., 0].size > 1)
+
+        layer = gala.MomentumNormalization(momentum=.1)
+        mean = lambda arr: np.mean(arr, axis=tuple(range(0, arr.ndim - 1)))
+        std = lambda arr: np.std(arr, axis=tuple(range(0, arr.ndim - 1)))
+        hypothesis.assume(np.all(std(x) > 1e-3))
+
+        @tf.function
+        def f(x):
+            return layer(x, training=True)
+
+        for _ in range(32):
+            output = f(x)
+
+        npt.assert_allclose(mean(output), 0., rtol=1e-2, atol=1e-2)
+        npt.assert_allclose(std(output), 1., rtol=1e-2, atol=1e-2)
+
+    @hypothesis.given(
+        hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
+    def basic_momentum_layer(self, x):
+        hypothesis.assume(np.all(np.abs(x) > 1e-3))
+        hypothesis.assume(len(np.unique(np.round(x, 3))) > 1)
+        hypothesis.assume(x[..., 0].size > 1)
+
+        layer = gala.MomentumLayerNormalization(momentum=.1)
+        norm = lambda arr: np.mean(np.linalg.norm(arr, axis=-1))
+
+        @tf.function
+        def f(x):
+            return layer(x, training=True)
+
+        for _ in range(32):
+            output = f(x)
+
+        npt.assert_allclose(norm(output), 1., rtol=1e-2, atol=1e-2)
 
 if __name__ == '__main__':
     unittest.main()

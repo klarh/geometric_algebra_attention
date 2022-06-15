@@ -3,10 +3,13 @@ import functools
 import unittest
 
 import hypothesis
+from hypothesis.extra import numpy as hnp
+import numpy as np
+import numpy.testing as npt
 import torch as pt
 from geometric_algebra_attention import pytorch as gala
 
-from test_internals import AllTests
+from test_internals import AllTests, finite_dtype
 
 @hypothesis.register_random
 class TorchRandom:
@@ -211,6 +214,41 @@ class PytorchTests(AllTests, unittest.TestCase):
         r = gala.Vector2Multivector().forward(r)
         net = self.get_label_multivector_layer(key)
         return gala.Multivector2Vector()(net.forward((v2, (r, v)))).detach().numpy()
+
+    @hypothesis.given(
+        hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
+    def basic_momentum(self, x):
+        hypothesis.assume(np.all(np.abs(x) > 1e-3))
+        hypothesis.assume(len(np.unique(np.round(x, 3))) > 1)
+        hypothesis.assume(x[..., 0].size > 1)
+
+        layer = gala.MomentumNormalization(x.shape[-1], momentum=.1)
+        layer.train()
+        mean = lambda arr: np.mean(arr, axis=tuple(range(0, arr.ndim - 1)))
+        std = lambda arr: np.std(arr, axis=tuple(range(0, arr.ndim - 1)))
+        hypothesis.assume(np.all(std(x) > 1e-3))
+
+        for _ in range(32):
+            output = layer.forward(pt.as_tensor(x))
+
+        npt.assert_allclose(mean(output.numpy()), 0., rtol=1e-2, atol=1e-2)
+        npt.assert_allclose(std(output.numpy()), 1., rtol=1e-2, atol=1e-2)
+
+    @hypothesis.given(
+        hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
+    def basic_momentum_layer(self, x):
+        hypothesis.assume(np.all(np.abs(x) > 1e-3))
+        hypothesis.assume(len(np.unique(np.round(x, 3))) > 1)
+        hypothesis.assume(x[..., 0].size > 1)
+
+        layer = gala.MomentumLayerNormalization(momentum=.1)
+        layer.train()
+        norm = lambda arr: np.mean(np.linalg.norm(arr, axis=-1))
+
+        for _ in range(32):
+            output = layer.forward(pt.as_tensor(x))
+
+        npt.assert_allclose(norm(output), 1., rtol=1e-2, atol=1e-2)
 
 if __name__ == '__main__':
     unittest.main()
