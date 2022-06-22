@@ -58,6 +58,6 @@ class AttentionBase:
 
         return attention, output
 
-    def forward(self, inputs):
+    def forward(self, inputs, mask=None):
         """Evaluate the attention calculation for this layer."""
-        return self._evaluate(inputs).output
+        return self._evaluate(inputs, mask=mask).output

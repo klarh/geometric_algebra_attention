@@ -9,7 +9,7 @@ import numpy.testing as npt
 import torch as pt
 from geometric_algebra_attention import pytorch as gala
 
-from test_internals import AllTests, finite_dtype
+from test_internals import AllTests, finite_dtype, point_cloud
 
 @hypothesis.register_random
 class TorchRandom:
@@ -249,6 +249,20 @@ class PytorchTests(AllTests, unittest.TestCase):
             output = layer.forward(pt.as_tensor(x))
 
         npt.assert_allclose(norm(output), 1., rtol=1e-2, atol=1e-2)
+
+    @hypothesis.given(point_cloud(weights=True))
+    def basic_mask(self, cloud):
+        (r, v, w) = cloud
+        mask = np.argsort(w) > 1
+        (r, v, mask) = map(pt.as_tensor, (r, v, mask))
+
+        layer = self.get_value_layer('basic_mask', reduce=False)
+        first_result = layer.forward((r, v), mask=mask).detach().numpy()
+        r[~mask] += 1
+        v[~mask] += 1
+        second_result = layer.forward((r, v), mask=mask).detach().numpy()
+        second_result[~mask] = first_result[~mask]
+        npt.assert_allclose(first_result, second_result)
 
 if __name__ == '__main__':
     unittest.main()
