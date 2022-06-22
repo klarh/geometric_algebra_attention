@@ -1,6 +1,7 @@
 import collections
 import itertools
 import math
+import numpy as np
 
 HUGE_FLOAT = 1e9
 
@@ -243,7 +244,7 @@ class AttentionBase:
 
     def _mask_scores(self, scores, broadcast_indices, mask):
         if mask is not None:
-            parsed_mask = self._parse_inputs(mask)
+            parsed_mask = self._parse_inputs(mask, is_mask=True)
             if any(p.positions is not None for p in parsed_mask):
                 masks = [self.math.bool_to_int(p.positions[..., None][idx])
                          for (p, idx) in zip(parsed_mask, broadcast_indices)
@@ -259,7 +260,7 @@ class AttentionBase:
             else:
                 value_mask = True
             product_mask = self.math.logical_and(position_mask, value_mask)
-            scores = self.math.where(product_mask, scores, -HUGE_FLOAT)
+            scores = self.math.where(product_mask, scores, self.math.asarray(-HUGE_FLOAT))
         return scores
 
     def _merge_fun(self, *args):
@@ -272,10 +273,20 @@ class AttentionBase:
         else:
             raise NotImplementedError()
 
-    def _parse_inputs(self, inputs):
+    def _parse_inputs(self, inputs, is_mask=False):
         result = []
 
-        inputs = list(inputs)
+        # handle parsing inputs=mask_array for convenience
+        if is_mask:
+            try:
+                inputs + 1
+                # inputs was just a single mask value
+                inputs = [inputs]
+            except TypeError: # inputs was a list/tuple already
+                pass
+        else:
+            inputs = list(inputs)
+
         if not isinstance(inputs[0], (list, tuple)):
             inputs = [inputs]
 
@@ -285,6 +296,9 @@ class AttentionBase:
                 w = 1
             elif len(piece) == 3:
                 (r, v, w) = piece
+            elif len(piece) == 1 and is_mask:
+                r = v = piece[0]
+                w = 1
             else:
                 raise NotImplementedError(piece)
             result.append(self.InputType(r, v, w))

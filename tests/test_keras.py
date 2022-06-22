@@ -10,7 +10,7 @@ import tensorflow as tf
 from tensorflow import keras
 from geometric_algebra_attention import keras as gala
 
-from test_internals import AllTests, TFRandom, finite_dtype
+from test_internals import AllTests, TFRandom, finite_dtype, point_cloud
 
 hypothesis.register_random(TFRandom)
 
@@ -213,6 +213,19 @@ class KerasTests(AllTests, unittest.TestCase):
             output = f(x)
 
         npt.assert_allclose(norm(output), 1., rtol=1e-2, atol=1e-2)
+
+    @hypothesis.given(point_cloud(weights=True))
+    def basic_mask(self, cloud):
+        (r, v, w) = cloud
+        mask = np.argsort(w) > 1
+
+        layer = self.get_value_layer('basic_mask', reduce=False)
+        first_result = layer((r, v), mask=mask).numpy()
+        r[~mask] += 1
+        v[~mask] += 1
+        second_result = layer((r, v), mask=mask).numpy()
+        second_result[~mask] = first_result[~mask]
+        npt.assert_allclose(first_result, second_result)
 
 if __name__ == '__main__':
     unittest.main()

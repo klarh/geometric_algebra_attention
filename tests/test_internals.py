@@ -17,7 +17,7 @@ finite_dtype = hnp.from_dtype(
     allow_nan=False, allow_infinity=False)
 
 weight_dtype = hnp.from_dtype(
-    np.dtype('float32'), min_value=0, max_value=10,
+    np.dtype('float32'), min_value=np.float32(1e-3), max_value=10,
     allow_nan=False, allow_infinity=False)
 
 @hs.composite
