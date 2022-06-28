@@ -157,21 +157,27 @@ class AttentionBase:
     def _evaluate(self, inputs, mask=None):
         parsed_inputs = self._parse_inputs(inputs)
         products = self._get_product_summary(parsed_inputs)
-        invar_values = self.value_net(products.summary.invariants)
+        summary_invariants = products.summary.invariants
+        invar_values = self.value_net(summary_invariants)
+        broadcast_indices = products.broadcast_indices
 
         joined_values = self._join_fun(invar_values, products.values)
         new_values = products.weights*joined_values
+        del products
 
         scores = self.score_net(joined_values)
         old_shape = self.math.shape(scores)
+        del joined_values
 
-        scores = self._mask_scores(scores, products.broadcast_indices, mask)
+        scores = self._mask_scores(scores, broadcast_indices, mask)
+        del broadcast_indices
 
         attention, output = self._calculate_attention(
             scores, new_values, old_shape)
+        del scores
 
         return self.OutputType(
-            attention, output, products.summary.invariants, invar_values, new_values)
+            attention, output, summary_invariants, invar_values, new_values)
 
     def _get_broadcast_indices(self):
         broadcast_indices = []
@@ -354,29 +360,36 @@ class LabeledAttentionBase:
         (child_values, inputs) = inputs
         parsed_inputs = self._parse_inputs(inputs)
         products = self._get_product_summary(parsed_inputs)
-        invar_values = self.value_net(products.summary.invariants)
+        summary_invariants = products.summary.invariants
+        invar_values = self.value_net(summary_invariants)
+        broadcast_indices = products.broadcast_indices
 
         swap_i = -self.rank - 2
         swap_j = -2
-        child_expand_indices = list(products.broadcast_indices[-1])
+        child_expand_indices = list(broadcast_indices[-1])
         child_expand_indices[swap_i], child_expand_indices[swap_j] = \
             child_expand_indices[swap_j], child_expand_indices[swap_i]
         child_values = child_values[tuple(child_expand_indices)]
 
         joined_values = self._join_fun(child_values, invar_values, products.values)
+        del child_values
         covariants = self._covariants(products.summary.covariants)
         new_values = covariants*self.scale_net(joined_values)
+        del products
 
         scores = self.score_net(joined_values)
         old_shape = self.math.shape(scores)
+        del joined_values
 
-        scores = self._mask_scores(scores, products.broadcast_indices, mask)
+        scores = self._mask_scores(scores, broadcast_indices, mask)
+        del broadcast_indices
 
         attention, output = self._calculate_attention(
             scores, new_values, old_shape)
+        del scores
 
         return self.OutputType(
-            attention, output, products.summary.invariants, invar_values, new_values)
+            attention, output, summary_invariants, invar_values, new_values)
 
     def _get_product_summary(self, inputs):
         products = super()._get_product_summary(inputs)
