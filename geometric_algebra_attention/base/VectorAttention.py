@@ -50,6 +50,8 @@ class VectorAttention(AttentionBase):
             if start == 0:
                 result['single'] = [series[0]]
                 result['partial'] = list(series)
+                if 'full' not in (self.invariant_mode, self.covariant_mode):
+                    break
             result['full'].extend(series)
 
         if self.include_normalized_products:
