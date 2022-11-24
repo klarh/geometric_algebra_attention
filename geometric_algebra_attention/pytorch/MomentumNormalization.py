@@ -32,6 +32,6 @@ class MomentumNormalization(pt.nn.Module):
             self.mu[:] = new_mu.detach()
             self.sigma[:] = new_sigma.detach()
 
-        sigma = pt.maximum(self.sigma, pt.as_tensor(1e-7))
+        sigma = pt.maximum(self.sigma, pt.as_tensor(1e-7, dtype=x.dtype, device=x.device))
 
         return (x - self.mu.detach())/sigma.detach()

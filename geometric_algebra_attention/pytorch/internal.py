@@ -16,7 +16,7 @@ class AttentionBase:
     math = base.Namespace(
         all=pt.all,
         any=pt.any,
-        asarray=pt.as_tensor,
+        asarray=lambda x, ref=None: pt.as_tensor(x, dtype=ref.dtype, device=ref.device),
         bool_to_int=lambda x: x.to(pt.int8),
         clip=pt.clip,
         concat=pt.cat,

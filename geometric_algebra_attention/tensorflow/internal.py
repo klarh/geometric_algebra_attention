@@ -9,7 +9,7 @@ class AttentionBase:
     math = base.Namespace(
         all=tf.reduce_all,
         any=tf.reduce_any,
-        asarray=tf.convert_to_tensor,
+        asarray=lambda x, ref=None: tf.convert_to_tensor(x),
         bool_to_int=lambda x: tf.cast(x, tf.int8),
         clip=tf.clip_by_value,
         concat=tf.concat,

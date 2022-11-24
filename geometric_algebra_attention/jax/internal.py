@@ -14,7 +14,7 @@ class AttentionBase:
     math = base.Namespace(
         all=jnp.all,
         any=jnp.any,
-        asarray=jnp.asarray,
+        asarray=lambda x, ref=None: jnp.asarray(x),
         bool_to_int=lambda x: x.astype(jnp.int8),
         clip=jnp.clip,
         concat=jnp.concatenate,
