@@ -11,6 +11,8 @@ from geometric_algebra_attention import pytorch as gala
 
 from test_internals import AllTests, finite_dtype, point_cloud
 
+pt.set_default_tensor_type('torch.cuda.FloatTensor')
+
 @hypothesis.register_random
 class TorchRandom:
     @staticmethod
@@ -50,7 +52,7 @@ class PytorchTests(AllTests, unittest.TestCase):
                          join_fun='mean', invar_mode='single', reduce=True):
         r, v = map(pt.as_tensor, (r, v))
         net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
-        return net.forward((r, v)).detach().numpy()
+        return net.forward((r, v)).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_value_multivector_layer(
@@ -79,7 +81,7 @@ class PytorchTests(AllTests, unittest.TestCase):
         r = gala.Vector2Multivector().forward(r)
         net = self.get_value_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, reduce)
-        return net.forward((r, v)).detach().numpy()
+        return net.forward((r, v)).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
@@ -117,7 +119,7 @@ class PytorchTests(AllTests, unittest.TestCase):
         r, v = map(pt.as_tensor, (r, v))
         net = self.get_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
-        return net.forward((r, v)).detach().numpy()
+        return net.forward((r, v)).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_multivector_layer(
@@ -157,7 +159,7 @@ class PytorchTests(AllTests, unittest.TestCase):
         net = self.get_vector_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
             include_normalized_products)
-        return gala.Multivector2Vector()(net.forward((r, v))).detach().numpy()
+        return gala.Multivector2Vector()(net.forward((r, v))).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_label_vector_layer(self, key=None):
@@ -184,7 +186,7 @@ class PytorchTests(AllTests, unittest.TestCase):
     def label_vector_prediction(self, r, v, v2, key=None):
         r, v, v2 = map(pt.as_tensor, (r, v, v2))
         net = self.get_label_vector_layer(key)
-        return net.forward((v2, (r, v))).detach().numpy()
+        return net.forward((v2, (r, v))).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_label_multivector_layer(self, key=None):
@@ -213,7 +215,7 @@ class PytorchTests(AllTests, unittest.TestCase):
         r, v, v2 = map(pt.as_tensor, (r, v, v2))
         r = gala.Vector2Multivector().forward(r)
         net = self.get_label_multivector_layer(key)
-        return gala.Multivector2Vector()(net.forward((v2, (r, v)))).detach().numpy()
+        return gala.Multivector2Vector()(net.forward((v2, (r, v)))).detach().cpu().numpy()
 
     @hypothesis.given(
         hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
@@ -231,8 +233,8 @@ class PytorchTests(AllTests, unittest.TestCase):
         for _ in range(32):
             output = layer.forward(pt.as_tensor(x))
 
-        npt.assert_allclose(mean(output.numpy()), 0., rtol=1e-2, atol=1e-2)
-        npt.assert_allclose(std(output.numpy()), 1., rtol=1e-2, atol=1e-2)
+        npt.assert_allclose(mean(output.cpu().numpy()), 0., rtol=1e-2, atol=1e-2)
+        npt.assert_allclose(std(output.cpu().numpy()), 1., rtol=1e-2, atol=1e-2)
 
     @hypothesis.given(
         hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
@@ -257,10 +259,10 @@ class PytorchTests(AllTests, unittest.TestCase):
         (r, v, mask) = map(pt.as_tensor, (r, v, mask))
 
         layer = self.get_value_layer('basic_mask', reduce=False)
-        first_result = layer.forward((r, v), mask=mask).detach().numpy()
+        first_result = layer.forward((r, v), mask=mask).detach().cpu().numpy()
         r[~mask] += 1
         v[~mask] += 1
-        second_result = layer.forward((r, v), mask=mask).detach().numpy()
+        second_result = layer.forward((r, v), mask=mask).detach().cpu().numpy()
         second_result[~mask] = first_result[~mask]
         npt.assert_allclose(first_result, second_result)
 
