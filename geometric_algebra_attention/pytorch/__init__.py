@@ -7,6 +7,7 @@ from .MomentumLayerNormalization import MomentumLayerNormalization
 from .MultivectorAttention import MultivectorAttention
 from .Multivector2MultivectorAttention import Multivector2MultivectorAttention
 from .Multivector2Vector import Multivector2Vector
+from .TiedMultivectorAttention import TiedMultivectorAttention
 from .TiedVectorAttention import TiedVectorAttention
 from .VectorAttention import VectorAttention
 from .Vector2Multivector import Vector2Multivector

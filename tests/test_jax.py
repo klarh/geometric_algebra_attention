@@ -147,6 +147,48 @@ class JaxTests(AllTests, unittest.TestCase):
         return gala.Multivector2Vector()(np.asarray(net((r, v)))).copy()
 
     @functools.lru_cache(maxsize=2)
+    def get_tied_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', covar_mode='single', include_normalized_products=False):
+        rng = jax.random.PRNGKey(13)
+        score = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(1)
+            )
+
+        value = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(self.DIM)
+            )
+
+        scale = serial(
+            Dense(2*self.DIM),
+            Relu,
+            Dense(1)
+            )
+
+        result_init, result_raw = gala.TiedMultivectorAttention(
+            score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode,
+            covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products).stax_functions
+        _, result_params = result_init(rng, (None, (self.DIM,)))
+        return functools.partial(result_raw, result_params)
+
+    def tied_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single',
+            covar_mode='single', include_normalized_products=False):
+        r = gala.Vector2Multivector()(r)
+        net = self.get_tied_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+        result = list(net((r, v)))
+        result[0] = gala.Multivector2Vector()(result[0])
+        return tuple(np.array(arr) for arr in result)
+
+    @functools.lru_cache(maxsize=2)
     def get_tied_vector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
             invar_mode='single', covar_mode='single', include_normalized_products=False):

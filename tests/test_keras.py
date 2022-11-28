@@ -127,6 +127,41 @@ class KerasTests(AllTests, unittest.TestCase):
         return gala.Multivector2Vector()(net((r, v))).numpy()
 
     @functools.lru_cache(maxsize=2)
+    def get_tied_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', covar_mode='single', include_normalized_products=False):
+        score = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        value = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(self.DIM)
+        ])
+
+        scale = keras.models.Sequential([
+            keras.layers.Dense(2*self.DIM, activation='relu'),
+            keras.layers.Dense(1)
+        ])
+
+        return gala.TiedMultivectorAttention(
+            score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products)
+
+    def tied_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', covar_mode='single',
+            include_normalized_products=False):
+        r = gala.Vector2Multivector()(r)
+        net = self.get_tied_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+        result = list(net((r, v)))
+        result[0] = gala.Multivector2Vector()(result[0])
+        return tuple(arr.numpy() for arr in result)
+
+    @functools.lru_cache(maxsize=2)
     def get_tied_vector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
             invar_mode='single', covar_mode='single', include_normalized_products=False):

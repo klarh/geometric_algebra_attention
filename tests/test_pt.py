@@ -162,6 +162,48 @@ class PytorchTests(AllTests, unittest.TestCase):
         return gala.Multivector2Vector()(net.forward((r, v))).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
+    def get_tied_multivector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', covar_mode='single', include_normalized_products=False):
+        score = pt.nn.Sequential(
+            pt.nn.Linear(self.DIM, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, 1)
+        )
+
+        invar_dims = gala.TiedMultivectorAttention.get_invariant_dims(
+            rank, invar_mode, include_normalized_products)
+        value = pt.nn.Sequential(
+            pt.nn.Linear(invar_dims, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, self.DIM)
+        )
+
+        scale = pt.nn.Sequential(
+            pt.nn.Linear(self.DIM, 2*self.DIM),
+            pt.nn.ReLU(),
+            pt.nn.Linear(2*self.DIM, 1)
+        )
+
+        return gala.TiedMultivectorAttention(
+            self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
+            include_normalized_products=include_normalized_products)
+
+    def tied_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', covar_mode='single',
+            include_normalized_products=False):
+        r, v = map(pt.as_tensor, (r, v))
+        r = gala.Vector2Multivector().forward(r)
+        net = self.get_tied_multivector_layer(
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
+        result = list(net.forward((r, v)))
+        result[0] = gala.Multivector2Vector()(result[0])
+        return tuple(arr.detach().cpu().numpy() for arr in result)
+
+    @functools.lru_cache(maxsize=2)
     def get_tied_vector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
             invar_mode='single', covar_mode='single', include_normalized_products=False):
