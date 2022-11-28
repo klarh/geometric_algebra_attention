@@ -21,6 +21,9 @@ Vector-input functions
 .. autoclass:: LabeledVectorAttention
    :members:
 
+.. autoclass:: TiedVectorAttention
+   :members:
+
 Multivector-input functions
 ---------------------------
 

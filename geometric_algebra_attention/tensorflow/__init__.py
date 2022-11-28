@@ -5,6 +5,7 @@ from .LabeledVectorAttention import LabeledVectorAttention
 from .MultivectorAttention import MultivectorAttention
 from .Multivector2MultivectorAttention import Multivector2MultivectorAttention
 from .Multivector2Vector import Multivector2Vector
+from .TiedVectorAttention import TiedVectorAttention
 from .VectorAttention import VectorAttention
 from .Vector2Multivector import Vector2Multivector
 from .Vector2VectorAttention import Vector2VectorAttention

@@ -250,6 +250,38 @@ class AllTests:
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
+    @settings(deadline=None)
+    @given(
+        unit_quaternions(),
+        point_cloud(),
+        hs.integers(1, 3),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(MERGE_MODES),
+        hs.sampled_from(INVARIANT_MODES),
+        hs.sampled_from(INVARIANT_MODES),
+        hs.booleans()
+    )
+    def test_rotation_equivariance_tied_vector(
+            self, q, rv, rank, merge_fun, join_fun,
+            invar_mode, covar_mode, include_normalized_products):
+        r, v = rv
+        rprime = rowan.rotate(q[None], r).astype(np.float32)
+
+        key = 'rotation_equivariance_tied_vector'
+        (pred1_covar, pred1_invar) = self.tied_vector_prediction(
+            r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
+        pred1_prime = rowan.rotate(q, pred1_covar)
+        (pred2_covar, pred2_invar) = self.tied_vector_prediction(
+            rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products)
+
+        err = np.max(np.square(pred1_prime - pred2_covar))
+        self.assertLess(err, 1e-5)
+
+        err = np.max(np.square(pred1_invar - pred2_invar))
+        self.assertLess(err, 1e-5)
+
 class TFRandom:
     @staticmethod
     def seed(seed):
