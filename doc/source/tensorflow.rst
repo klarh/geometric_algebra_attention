@@ -21,9 +21,6 @@ Vector-input functions
 .. autoclass:: LabeledVectorAttention
    :members:
 
-.. autoclass:: TiedMultivectorAttention
-   :members:
-
 .. autoclass:: TiedVectorAttention
    :members:
 
@@ -40,4 +37,7 @@ Multivector-input functions
    :members:
 
 .. autoclass:: LabeledMultivectorAttention
+   :members:
+
+.. autoclass:: TiedMultivectorAttention
    :members:
