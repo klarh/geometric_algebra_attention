@@ -260,7 +260,8 @@ class AttentionBase:
             else:
                 value_mask = True
             product_mask = self.math.logical_and(position_mask, value_mask)
-            scores = self.math.where(product_mask, scores, self.math.asarray(-HUGE_FLOAT))
+            scores = self.math.where(product_mask, scores,
+                                     self.math.asarray(-HUGE_FLOAT, scores))
         return scores
 
     def _merge_fun(self, *args):
