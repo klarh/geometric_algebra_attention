@@ -25,7 +25,7 @@ class AttentionBase:
         product=keepdims_decorator(pt.prod),
         reshape=pt.reshape,
         shape=lambda x: x.shape,
-        softmax=pt.softmax,
+        softmax=lambda x: pt.softmax(x, dim=-1),
         sqrt=pt.sqrt,
         sum=keepdims_decorator(pt.sum),
         tensordot=pt.tensordot,
@@ -50,7 +50,7 @@ class AttentionBase:
 
         shape = list(old_shape[:dims]) + [old_shape[dims:].numel()]
         scores = self.math.reshape(scores, shape)
-        attention = self.math.reshape(self.math.softmax(scores, -1), old_shape)
+        attention = self.math.reshape(self.math.softmax(scores), old_shape)
         if reduce_axes:
             output = self.math.sum(attention*values, reduce_axes)
         else:
