@@ -9,6 +9,10 @@ class Vector2Multivector(base.Vector2Multivector, keras.layers.Layer):
 
     math = AttentionBase.math
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.supports_masking = True
+
     def call(self, inputs, mask=None):
         return self._evaluate(inputs)
 
