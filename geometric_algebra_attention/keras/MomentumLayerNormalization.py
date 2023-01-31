@@ -34,7 +34,7 @@ class MomentumLayerNormalization(keras.layers.Layer):
 
         result = inputs/tf.maximum(self.norm, self.epsilon)
         if mask is not None:
-            return tf.where(mask, result, inputs)
+            return tf.where(mask[..., None], result, inputs)
         return result
 
     def get_config(self):

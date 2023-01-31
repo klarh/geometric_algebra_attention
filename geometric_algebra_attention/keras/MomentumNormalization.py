@@ -50,7 +50,7 @@ class MomentumNormalization(keras.layers.Layer):
         denominator = use_std*(self.sigma + self.epsilon) + (1 - use_std)*1.
         result = (inputs - mu)/denominator
         if mask is not None:
-            return tf.where(mask, result, inputs)
+            return tf.where(mask[..., None], result, inputs)
         return result
 
     def get_config(self):
