@@ -32,16 +32,16 @@ class MomentumNormalization(keras.layers.Layer):
             name='mu', shape=shape, initializer='zeros', trainable=False)
         self.sigma = self.add_weight(
             name='sigma', shape=shape, initializer='ones', trainable=False)
+        self._summary_axes = tuple(range(len(input_shape) - 1))
 
     def call(self, inputs, training=False, mask=None):
         if training:
-            axes = range(len(inputs.shape) - 1)
             if mask is not None:
                 values = tf.ragged.boolean_mask(inputs, mask=mask)
             else:
                 values = inputs
-            mean = tf.math.reduce_mean(values, axis=axes, keepdims=False)
-            std = tf.math.reduce_std(values, axis=axes, keepdims=False)
+            mean = tf.math.reduce_mean(values, axis=self._summary_axes, keepdims=False)
+            std = tf.math.reduce_std(values, axis=self._summary_axes, keepdims=False)
             self.mu.assign(self.momentum*self.mu + (1 - self.momentum)*mean)
             self.sigma.assign(self.momentum*self.sigma + (1 - self.momentum)*std)
 
