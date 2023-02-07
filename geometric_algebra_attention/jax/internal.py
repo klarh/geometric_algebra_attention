@@ -19,6 +19,7 @@ class AttentionBase:
         clip=jnp.clip,
         concat=jnp.concatenate,
         logical_and=jnp.logical_and,
+        named_constant=lambda name, x, ref: jnp.asarray(x),
         pow=jnp.power,
         product=jnp.prod,
         reshape=jnp.reshape,

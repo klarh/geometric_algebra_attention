@@ -10,6 +10,20 @@ def keepdims_decorator(f):
         return f(*args, **kwargs)
     return wrapped
 
+class NamedArrayCache:
+    _cache = {}
+
+    @classmethod
+    def get(cls, name, array, dtype, device):
+        key = (name, dtype, device)
+        if key not in cls._cache:
+            cls._cache = pt.as_tensor(array, dtype=dtype, device=device)
+        return cls._cache[key]
+
+    @classmethod
+    def get_wrapper(cls, name, array, ref):
+        return cls.get(name, array, ref.dtype, ref.device)
+
 class AttentionBase:
     algebra = geometric_algebra
 
@@ -21,6 +35,7 @@ class AttentionBase:
         clip=pt.clip,
         concat=pt.cat,
         logical_and=pt.logical_and,
+        named_constant=NamedArrayCache.get_wrapper,
         pow=pt.pow,
         product=keepdims_decorator(pt.prod),
         reshape=pt.reshape,

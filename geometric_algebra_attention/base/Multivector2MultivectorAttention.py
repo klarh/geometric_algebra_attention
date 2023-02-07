@@ -71,7 +71,8 @@ class Multivector2MultivectorAttention:
         if self.convex_covariants:
             weights = self.math.concat([
                 self.vector_kernels,
-                self.math.asarray([0.], self.vector_kernels)], axis=-1)
+                self.math.named_constant('single zero array', [0.], self.vector_kernels)
+            ], axis=-1)
             weights = self.math.softmax(weights)
         else:
             weights = self.vector_kernels

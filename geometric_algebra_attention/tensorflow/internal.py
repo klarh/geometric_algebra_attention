@@ -14,6 +14,7 @@ class AttentionBase:
         clip=tf.clip_by_value,
         concat=tf.concat,
         logical_and=tf.logical_and,
+        named_constant=lambda name, x, ref: tf.constant(x),
         pow=tf.pow,
         product=tf.reduce_prod,
         reshape=tf.reshape,
