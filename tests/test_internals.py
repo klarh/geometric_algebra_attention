@@ -32,9 +32,6 @@ def point_cloud(draw, weights=False):
     r = draw(hnp.arrays(np.float32, (N, 3), elements=finite_dtype))
     v = draw(hnp.arrays(np.float32, (N, DIM), elements=finite_dtype))
 
-    assume(np.all(np.any(np.square(r) > 1e-5, axis=-1)))
-    assume(np.all(np.any(np.square(v) > 1e-5, axis=-1)))
-
     result = [r, v]
 
     if weights:
