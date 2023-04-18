@@ -3,7 +3,10 @@ import functools
 import unittest
 
 import jax
-from jax.experimental.stax import serial, Dense, Relu
+try:
+    from jax.example_libraries.stax import serial, Dense, Relu
+except ImportError:
+    from jax.experimental.stax import serial, Dense, Relu
 import numpy as np
 from geometric_algebra_attention import jax as gala
 
