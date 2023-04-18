@@ -13,8 +13,9 @@ hypothesis.register_random(TFRandom)
 
 class TensorflowTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
-    def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', reduce=True):
+    def get_value_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', reduce=True, linear_mode='partial', linear_terms=0):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -25,18 +26,24 @@ class TensorflowTests(AllTests, unittest.TestCase):
             keras.layers.Dense(self.DIM)
         ])
 
-        return gala.VectorAttention(self.DIM, score, value, rank=rank, merge_fun=merge_fun,
-                               join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
+        return gala.VectorAttention(
+            self.DIM, score, value, rank=rank, merge_fun=merge_fun,
+            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce,
+            linear_mode=linear_mode, linear_terms=linear_terms)
 
-    def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                         join_fun='mean', invar_mode='single', reduce=True):
-        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+    def value_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', reduce=True,
+            linear_mode='partial', linear_terms=0):
+        net = self.get_value_layer(
+            key, rank, merge_fun, join_fun, invar_mode, reduce,
+            linear_mode, linear_terms)
         return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_value_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', reduce=True):
+            invar_mode='single', reduce=True, linear_mode='partial', linear_terms=0):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -49,20 +56,24 @@ class TensorflowTests(AllTests, unittest.TestCase):
 
         return gala.MultivectorAttention(
             self.DIM, score, value, rank=rank, merge_fun=merge_fun,
-            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
+            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce,
+            linear_mode=linear_mode, linear_terms=linear_terms)
 
     def value_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
-            join_fun='mean', invar_mode='single', reduce=True):
+            join_fun='mean', invar_mode='single', reduce=True,
+            linear_mode='partial', linear_terms=0):
         r = gala.Vector2Multivector()(r)
         net = self.get_value_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, reduce)
+            key, rank, merge_fun, join_fun, invar_mode, reduce,
+            linear_mode, linear_terms)
         return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
                          invar_mode='single', covar_mode='single',
-                         include_normalized_products=False):
+                         include_normalized_products=False,
+                         linear_mode='partial', linear_terms=0):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -82,20 +93,23 @@ class TensorflowTests(AllTests, unittest.TestCase):
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
             include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
         )
 
-    def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                          join_fun='mean', invar_mode='single', covar_mode='single',
-                          include_normalized_products=False):
+    def vector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         net = self.get_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         return net((r, v)).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -115,22 +129,24 @@ class TensorflowTests(AllTests, unittest.TestCase):
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
             include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
         )
 
     def vector_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', covar_mode='single',
-            include_normalized_products=False):
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         r = gala.Vector2Multivector()(r)
         net = self.get_vector_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         return gala.Multivector2Vector()(net((r, v))).numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_tied_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -150,16 +166,17 @@ class TensorflowTests(AllTests, unittest.TestCase):
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
             include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
         )
 
     def tied_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', covar_mode='single',
-            include_normalized_products=False):
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         r = gala.Vector2Multivector()(r)
         net = self.get_tied_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         result = list(net((r, v)))
         result[0] = gala.Multivector2Vector()(result[0])
         return tuple(arr.numpy() for arr in result)
@@ -167,7 +184,8 @@ class TensorflowTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_tied_vector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         score = keras.models.Sequential([
             keras.layers.Dense(2*self.DIM, activation='relu'),
             keras.layers.Dense(1)
@@ -187,15 +205,16 @@ class TensorflowTests(AllTests, unittest.TestCase):
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
             include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
         )
 
     def tied_vector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', covar_mode='single',
-            include_normalized_products=False):
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         net = self.get_tied_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         return tuple(arr.numpy() for arr in net((r, v)))
 
     @functools.lru_cache(maxsize=2)

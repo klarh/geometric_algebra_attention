@@ -10,6 +10,8 @@ DIM = 7
 
 INVARIANT_MODES = ['full', 'partial', 'single']
 
+LINEAR_MODES = ['full', 'partial']
+
 MERGE_MODES = ['mean', 'concat']
 
 finite_dtype = hnp.from_dtype(
@@ -56,14 +58,22 @@ class AllTests:
         hs.integers(1, 3),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
-        hs.sampled_from(INVARIANT_MODES))
-    def test_rotation_invariance_value(self, q, rv, rank, merge_fun, join_fun, invar_mode):
+        hs.sampled_from(INVARIANT_MODES),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
+    )
+    def test_rotation_invariance_value(self, q, rv, rank, merge_fun, join_fun,
+                                       invar_mode, linear_mode, linear_terms):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_invariance'
-        prediction1 = self.value_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode)
-        prediction2 = self.value_prediction(rprime, v, key, rank, merge_fun, join_fun, invar_mode)
+        prediction1 = self.value_prediction(
+            r, v, key, rank, merge_fun, join_fun,
+            invar_mode, linear_mode=linear_mode, linear_terms=linear_terms)
+        prediction2 = self.value_prediction(
+            rprime, v, key, rank, merge_fun, join_fun, invar_mode,
+            linear_mode=linear_mode, linear_terms=linear_terms)
 
         self.assertEqual(v[0].shape, prediction1.shape)
         err = np.max(np.square(prediction1 - prediction2))
@@ -76,8 +86,13 @@ class AllTests:
         hs.integers(1, 3),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
-        hs.sampled_from(INVARIANT_MODES))
-    def test_permutation_equivariance_value(self, swap_i, swap_j, rank, merge_fun, join_fun, invar_mode):
+        hs.sampled_from(INVARIANT_MODES),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
+    )
+    def test_permutation_equivariance_value(self, swap_i, swap_j, rank, merge_fun,
+                                            join_fun, invar_mode, linear_mode,
+                                            linear_terms):
         np.random.seed(13)
         r = np.random.normal(size=(7, 3)).astype(np.float32)
         r /= np.linalg.norm(r, axis=-1, keepdims=True)
@@ -91,8 +106,12 @@ class AllTests:
         vprime[swap_i], vprime[swap_j] = v[swap_j], v[swap_i]
 
         key = 'permutation_equivariance'
-        prediction1 = self.value_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode, reduce=False)
-        prediction2 = self.value_prediction(rprime, vprime, key, rank, merge_fun, join_fun, invar_mode, reduce=False)
+        prediction1 = self.value_prediction(
+            r, v, key, rank, merge_fun, join_fun, invar_mode, reduce=False,
+            linear_mode=linear_mode, linear_terms=linear_terms)
+        prediction2 = self.value_prediction(
+            rprime, vprime, key, rank, merge_fun, join_fun, invar_mode,
+            reduce=False, linear_mode=linear_mode, linear_terms=linear_terms)
 
         self.assertEqual(v.shape, prediction1.shape)
         temp = prediction2[swap_i].copy()
@@ -108,14 +127,23 @@ class AllTests:
         hs.integers(1, 3),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
-        hs.sampled_from(INVARIANT_MODES))
-    def test_rotation_invariance_multivector_value(self, q, rv, rank, merge_fun, join_fun, invar_mode):
+        hs.sampled_from(INVARIANT_MODES),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
+    )
+    def test_rotation_invariance_multivector_value(
+            self, q, rv, rank, merge_fun,
+            join_fun, invar_mode, linear_mode, linear_terms):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_invariance'
-        prediction1 = self.value_multivector_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode)
-        prediction2 = self.value_multivector_prediction(rprime, v, key, rank, merge_fun, join_fun, invar_mode)
+        prediction1 = self.value_multivector_prediction(
+            r, v, key, rank, merge_fun, join_fun, invar_mode,
+            linear_mode=linear_mode, linear_terms=linear_terms)
+        prediction2 = self.value_multivector_prediction(
+            rprime, v, key, rank, merge_fun, join_fun, invar_mode,
+            linear_mode=linear_mode, linear_terms=linear_terms)
 
         self.assertEqual(v[0].shape, prediction1.shape)
         err = np.max(np.square(prediction1 - prediction2))
@@ -128,8 +156,13 @@ class AllTests:
         hs.integers(1, 3),
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(MERGE_MODES),
-        hs.sampled_from(INVARIANT_MODES))
-    def test_permutation_equivariance_multivector_value(self, swap_i, swap_j, rank, merge_fun, join_fun, invar_mode):
+        hs.sampled_from(INVARIANT_MODES),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
+    )
+    def test_permutation_equivariance_multivector_value(
+            self, swap_i, swap_j, rank, merge_fun, join_fun, invar_mode,
+            linear_mode, linear_terms):
         np.random.seed(13)
         r = np.random.normal(size=(7, 3)).astype(np.float32)
         r /= np.linalg.norm(r, axis=-1, keepdims=True)
@@ -143,8 +176,12 @@ class AllTests:
         vprime[swap_i], vprime[swap_j] = v[swap_j], v[swap_i]
 
         key = 'permutation_equivariance'
-        prediction1 = self.value_multivector_prediction(r, v, key, rank, merge_fun, join_fun, invar_mode, reduce=False)
-        prediction2 = self.value_multivector_prediction(rprime, vprime, key, rank, merge_fun, join_fun, invar_mode, reduce=False)
+        prediction1 = self.value_multivector_prediction(
+            r, v, key, rank, merge_fun, join_fun, invar_mode, reduce=False,
+            linear_mode=linear_mode, linear_terms=linear_terms)
+        prediction2 = self.value_multivector_prediction(
+            rprime, vprime, key, rank, merge_fun, join_fun, invar_mode,
+            reduce=False, linear_mode=linear_mode, linear_terms=linear_terms)
 
         self.assertEqual(v.shape, prediction1.shape)
         temp = prediction2[swap_i].copy()
@@ -163,21 +200,26 @@ class AllTests:
         hs.sampled_from(INVARIANT_MODES),
         hs.sampled_from(INVARIANT_MODES),
         hs.booleans(),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
     )
     def test_rotation_covariance_vector(
             self, q, rv, rank, merge_fun, join_fun,
-            invar_mode, covar_mode, include_normalized_products):
+            invar_mode, covar_mode, include_normalized_products,
+            linear_mode, linear_terms):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_covariance'
         prediction1 = self.vector_prediction(
             r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode=linear_mode,
+            linear_terms=linear_terms)
         prediction1_prime = rowan.rotate(q, prediction1)
         prediction2 = self.vector_prediction(
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode=linear_mode,
+            linear_terms=linear_terms)
 
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
@@ -191,22 +233,27 @@ class AllTests:
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(INVARIANT_MODES),
         hs.sampled_from(INVARIANT_MODES),
-        hs.booleans()
+        hs.booleans(),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
     )
     def test_rotation_covariance_multivector(
             self, q, rv, rank, merge_fun, join_fun,
-            invar_mode, covar_mode, include_normalized_products):
+            invar_mode, covar_mode, include_normalized_products,
+            linear_mode, linear_terms):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_covariance'
         prediction1 = self.vector_multivector_prediction(
             r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode=linear_mode,
+            linear_terms=linear_terms)
         prediction1_prime = rowan.rotate(q, prediction1)
         prediction2 = self.vector_multivector_prediction(
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode=linear_mode,
+            linear_terms=linear_terms)
 
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
@@ -256,22 +303,25 @@ class AllTests:
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(INVARIANT_MODES),
         hs.sampled_from(INVARIANT_MODES),
-        hs.booleans()
+        hs.booleans(),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
     )
     def test_rotation_equivariance_tied_vector(
             self, q, rv, rank, merge_fun, join_fun,
-            invar_mode, covar_mode, include_normalized_products):
+            invar_mode, covar_mode, include_normalized_products,
+            linear_mode, linear_terms):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_equivariance_tied_vector'
         (pred1_covar, pred1_invar) = self.tied_vector_prediction(
             r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         pred1_prime = rowan.rotate(q, pred1_covar)
         (pred2_covar, pred2_invar) = self.tied_vector_prediction(
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
 
         err = np.max(np.square(pred1_prime - pred2_covar))
         self.assertLess(err, 1e-5)
@@ -288,22 +338,25 @@ class AllTests:
         hs.sampled_from(MERGE_MODES),
         hs.sampled_from(INVARIANT_MODES),
         hs.sampled_from(INVARIANT_MODES),
-        hs.booleans()
+        hs.booleans(),
+        hs.sampled_from(LINEAR_MODES),
+        hs.integers(0, 4),
     )
     def test_rotation_equivariance_tied_multivector(
             self, q, rv, rank, merge_fun, join_fun,
-            invar_mode, covar_mode, include_normalized_products):
+            invar_mode, covar_mode, include_normalized_products,
+            linear_mode, linear_terms):
         r, v = rv
         rprime = rowan.rotate(q[None], r).astype(np.float32)
 
         key = 'rotation_equivariance_tied_multivector'
         (pred1_covar, pred1_invar) = self.tied_multivector_prediction(
             r, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         pred1_prime = rowan.rotate(q, pred1_covar)
         (pred2_covar, pred2_invar) = self.tied_multivector_prediction(
             rprime, v, key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
 
         err = np.max(np.square(pred1_prime - pred2_covar))
         self.assertLess(err, 1e-5)

@@ -14,8 +14,9 @@ from test_internals import AllTests
 
 class JaxTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
-    def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', reduce=True):
+    def get_value_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', reduce=True, linear_mode='partial', linear_terms=0):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -30,20 +31,25 @@ class JaxTests(AllTests, unittest.TestCase):
             )
 
         result_init, result_raw = gala.VectorAttention(
-            score, value, rank=rank, reduce=reduce, merge_fun=merge_fun,
+            score, value, rank=rank, reduce=reduce, linear_mode=linear_mode,
+            linear_terms=linear_terms, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
-    def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                         join_fun='mean', invar_mode='single', reduce=True):
-        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+    def value_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', reduce=True,
+            linear_mode='partial', linear_terms=0):
+        net = self.get_value_layer(
+            key, rank, merge_fun, join_fun, invar_mode, reduce,
+            linear_mode, linear_terms)
         return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)
     def get_value_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', reduce=True):
+            invar_mode='single', reduce=True, linear_mode='partial', linear_terms=0):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -58,23 +64,27 @@ class JaxTests(AllTests, unittest.TestCase):
             )
 
         result_init, result_raw = gala.MultivectorAttention(
-            score, value, rank=rank, reduce=reduce, merge_fun=merge_fun,
+            score, value, rank=rank, reduce=reduce, linear_mode=linear_mode,
+            linear_terms=linear_terms, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def value_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
-            join_fun='mean', invar_mode='single', reduce=True):
+            join_fun='mean', invar_mode='single', reduce=True,
+            linear_mode='partial', linear_terms=0):
         r = gala.Vector2Multivector()(r)
         net = self.get_value_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, reduce)
+            key, rank, merge_fun, join_fun, invar_mode, reduce, linear_mode, linear_terms)
         return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
                          invar_mode='single', covar_mode='single',
-                         include_normalized_products=False):
+                         include_normalized_products=False,
+                         linear_mode='partial', linear_terms=0,
+                         ):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -98,21 +108,27 @@ class JaxTests(AllTests, unittest.TestCase):
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
             covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products).stax_functions
+            include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
+        ).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
                           join_fun='mean', invar_mode='single',
-                          covar_mode='single', include_normalized_products=False):
+                          covar_mode='single', include_normalized_products=False,
+                          linear_mode='partial', linear_terms=0,
+                          ):
         net = self.get_vector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products, linear_mode, linear_terms)
         return np.asarray(net((r, v))).copy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -136,23 +152,30 @@ class JaxTests(AllTests, unittest.TestCase):
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
             covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products).stax_functions
+            include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
+        ).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def vector_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single',
-            covar_mode='single', include_normalized_products=False):
+            covar_mode='single', include_normalized_products=False,
+            linear_mode='partial', linear_terms=0,
+    ):
         r = gala.Vector2Multivector()(r)
         net = self.get_vector_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products, linear_mode, linear_terms)
         return gala.Multivector2Vector()(np.asarray(net((r, v)))).copy()
 
     @functools.lru_cache(maxsize=2)
     def get_tied_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single', include_normalized_products=False,
+            linear_mode='partial', linear_terms=0,
+    ):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -176,17 +199,21 @@ class JaxTests(AllTests, unittest.TestCase):
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
             covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products).stax_functions
+            include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
+        ).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def tied_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single',
-            covar_mode='single', include_normalized_products=False):
+            covar_mode='single', include_normalized_products=False,
+            linear_mode='partial', linear_terms=0):
         r = gala.Vector2Multivector()(r)
         net = self.get_tied_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products, linear_mode, linear_terms)
         result = list(net((r, v)))
         result[0] = gala.Multivector2Vector()(result[0])
         return tuple(np.array(arr) for arr in result)
@@ -194,7 +221,8 @@ class JaxTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_tied_vector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         rng = jax.random.PRNGKey(13)
         score = serial(
             Dense(2*self.DIM),
@@ -218,16 +246,20 @@ class JaxTests(AllTests, unittest.TestCase):
             score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode,
             covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products).stax_functions
+            include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
+        ).stax_functions
         _, result_params = result_init(rng, (None, (self.DIM,)))
         return functools.partial(result_raw, result_params)
 
     def tied_vector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single',
-            covar_mode='single', include_normalized_products=False):
+            covar_mode='single', include_normalized_products=False,
+            linear_mode='partial', linear_terms=0):
         net = self.get_tied_vector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products, linear_mode, linear_terms)
         return tuple(np.array(arr) for arr in net((r, v)))
 
     @functools.lru_cache(maxsize=2)

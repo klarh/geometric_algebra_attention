@@ -29,15 +29,17 @@ class TorchRandom:
 
 class PytorchTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
-    def get_value_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', reduce=True):
+    def get_value_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', reduce=True, linear_mode='partial', linear_terms=0):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
             pt.nn.Linear(2*self.DIM, 1)
         )
 
-        invar_dims = gala.VectorAttention.get_invariant_dims(rank, invar_mode)
+        invar_dims = gala.VectorAttention.get_invariant_dims(
+            rank, invar_mode, linear_mode=linear_mode, linear_terms=linear_terms)
         value = pt.nn.Sequential(
             pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
@@ -46,25 +48,30 @@ class PytorchTests(AllTests, unittest.TestCase):
 
         return gala.VectorAttention(
             self.DIM, score, value, rank=rank, merge_fun=merge_fun,
-            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
+            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce,
+            linear_mode=linear_mode, linear_terms=linear_terms)
 
-    def value_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                         join_fun='mean', invar_mode='single', reduce=True):
+    def value_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', reduce=True,
+            linear_mode='partial', linear_terms=0):
         r, v = map(pt.as_tensor, (r, v))
-        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode, reduce)
+        net = self.get_value_layer(key, rank, merge_fun, join_fun, invar_mode,
+                                   reduce, linear_mode, linear_terms)
         return net.forward((r, v)).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_value_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', reduce=True):
+            invar_mode='single', reduce=True, linear_mode='partial', linear_terms=0):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
             pt.nn.Linear(2*self.DIM, 1)
         )
 
-        invar_dims = gala.MultivectorAttention.get_invariant_dims(rank, invar_mode)
+        invar_dims = gala.MultivectorAttention.get_invariant_dims(
+            rank, invar_mode, linear_mode=linear_mode, linear_terms=linear_terms)
         value = pt.nn.Sequential(
             pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
@@ -73,20 +80,25 @@ class PytorchTests(AllTests, unittest.TestCase):
 
         return gala.MultivectorAttention(
             self.DIM, score, value, rank=rank, merge_fun=merge_fun,
-            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce)
+            join_fun=join_fun, invariant_mode=invar_mode, reduce=reduce,
+            linear_mode=linear_mode, linear_terms=linear_terms)
 
-    def value_multivector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                         join_fun='mean', invar_mode='single', reduce=True):
+    def value_multivector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', reduce=True,
+            linear_mode='partial', linear_terms=0):
         r, v = map(pt.as_tensor, (r, v))
         r = gala.Vector2Multivector().forward(r)
         net = self.get_value_multivector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, reduce)
+            key, rank, merge_fun, join_fun, invar_mode, reduce, linear_mode, linear_terms)
         return net.forward((r, v)).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
-    def get_vector_layer(self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-                         invar_mode='single', covar_mode='single',
-                         include_normalized_products=False):
+    def get_vector_layer(
+            self, key=None, rank=2, merge_fun='mean', join_fun='mean',
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial',
+            linear_terms=0):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
@@ -94,7 +106,8 @@ class PytorchTests(AllTests, unittest.TestCase):
         )
 
         invar_dims = gala.VectorAttention.get_invariant_dims(
-            rank, invar_mode, include_normalized_products)
+            rank, invar_mode, include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms)
         value = pt.nn.Sequential(
             pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
@@ -111,20 +124,24 @@ class PytorchTests(AllTests, unittest.TestCase):
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
             include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
         )
 
-    def vector_prediction(self, r, v, key=None, rank=2, merge_fun='mean',
-                          join_fun='mean', invar_mode='single', covar_mode='single',
-                          include_normalized_products=False):
+    def vector_prediction(
+            self, r, v, key=None, rank=2, merge_fun='mean',
+            join_fun='mean', invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         r, v = map(pt.as_tensor, (r, v))
         net = self.get_vector_layer(
-            key, rank, merge_fun, join_fun, invar_mode, covar_mode, include_normalized_products)
+            key, rank, merge_fun, join_fun, invar_mode, covar_mode,
+            include_normalized_products, linear_mode, linear_terms)
         return net.forward((r, v)).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_vector_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
@@ -132,7 +149,8 @@ class PytorchTests(AllTests, unittest.TestCase):
         )
 
         invar_dims = gala.Multivector2MultivectorAttention.get_invariant_dims(
-            rank, invar_mode, include_normalized_products)
+            rank, invar_mode, include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms)
         value = pt.nn.Sequential(
             pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
@@ -148,23 +166,25 @@ class PytorchTests(AllTests, unittest.TestCase):
         return gala.Multivector2MultivectorAttention(
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products)
+            include_normalized_products=include_normalized_products,
+    linear_mode=linear_mode, linear_terms=linear_terms)
 
     def vector_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', covar_mode='single',
-            include_normalized_products=False):
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         r, v = map(pt.as_tensor, (r, v))
         r = gala.Vector2Multivector().forward(r)
         net = self.get_vector_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         return gala.Multivector2Vector()(net.forward((r, v))).detach().cpu().numpy()
 
     @functools.lru_cache(maxsize=2)
     def get_tied_multivector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
@@ -172,7 +192,8 @@ class PytorchTests(AllTests, unittest.TestCase):
         )
 
         invar_dims = gala.TiedMultivectorAttention.get_invariant_dims(
-            rank, invar_mode, include_normalized_products)
+            rank, invar_mode, include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms)
         value = pt.nn.Sequential(
             pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
@@ -188,17 +209,19 @@ class PytorchTests(AllTests, unittest.TestCase):
         return gala.TiedMultivectorAttention(
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products)
+            include_normalized_products=include_normalized_products,
+    linear_mode=linear_mode, linear_terms=linear_terms,
+        )
 
     def tied_multivector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', covar_mode='single',
-            include_normalized_products=False):
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         r, v = map(pt.as_tensor, (r, v))
         r = gala.Vector2Multivector().forward(r)
         net = self.get_tied_multivector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         result = list(net.forward((r, v)))
         result[0] = gala.Multivector2Vector()(result[0])
         return tuple(arr.detach().cpu().numpy() for arr in result)
@@ -206,7 +229,8 @@ class PytorchTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_tied_vector_layer(
             self, key=None, rank=2, merge_fun='mean', join_fun='mean',
-            invar_mode='single', covar_mode='single', include_normalized_products=False):
+            invar_mode='single', covar_mode='single',
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         score = pt.nn.Sequential(
             pt.nn.Linear(self.DIM, 2*self.DIM),
             pt.nn.ReLU(),
@@ -214,7 +238,8 @@ class PytorchTests(AllTests, unittest.TestCase):
         )
 
         invar_dims = gala.TiedVectorAttention.get_invariant_dims(
-            rank, invar_mode, include_normalized_products)
+            rank, invar_mode, include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms)
         value = pt.nn.Sequential(
             pt.nn.Linear(invar_dims, 2*self.DIM),
             pt.nn.ReLU(),
@@ -230,16 +255,18 @@ class PytorchTests(AllTests, unittest.TestCase):
         return gala.TiedVectorAttention(
             self.DIM, score, value, scale, rank=rank, merge_fun=merge_fun,
             join_fun=join_fun, invariant_mode=invar_mode, covariant_mode=covar_mode,
-            include_normalized_products=include_normalized_products)
+            include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
+            )
 
     def tied_vector_prediction(
             self, r, v, key=None, rank=2, merge_fun='mean',
             join_fun='mean', invar_mode='single', covar_mode='single',
-            include_normalized_products=False):
+            include_normalized_products=False, linear_mode='partial', linear_terms=0):
         r, v = map(pt.as_tensor, (r, v))
         net = self.get_tied_vector_layer(
             key, rank, merge_fun, join_fun, invar_mode, covar_mode,
-            include_normalized_products)
+            include_normalized_products, linear_mode, linear_terms)
         return tuple(arr.detach().cpu().numpy() for arr in net.forward((r, v)))
 
     @functools.lru_cache(maxsize=2)
