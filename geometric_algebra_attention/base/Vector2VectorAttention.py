@@ -51,6 +51,7 @@ class Vector2VectorAttention:
             result = self.rank
         if self.include_normalized_products:
             result *= 2
+        result += (self.linear_terms if self.rank > 1 else 0)
         return result
 
     def _build_weight_definitions(self, n_dim):

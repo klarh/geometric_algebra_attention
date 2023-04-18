@@ -13,6 +13,7 @@ class Multivector2MultivectorAttention(base.Multivector2MultivectorAttention, Mu
                  merge_fun='mean', join_fun='mean', rank=2,
                  invariant_mode='single', covariant_mode='partial',
                  include_normalized_products=False,
+                 linear_mode='partial', linear_terms=0,
                  convex_covariants=False, **kwargs):
         self.scale_net_params = self.scale_net_fn = None
         base.Multivector2MultivectorAttention.__init__(
@@ -22,6 +23,7 @@ class Multivector2MultivectorAttention(base.Multivector2MultivectorAttention, Mu
             reduce=reduce, merge_fun=merge_fun, join_fun=join_fun, rank=rank,
             invariant_mode=invariant_mode, covariant_mode=covariant_mode,
             include_normalized_products=include_normalized_products,
+            linear_mode=linear_mode, linear_terms=linear_terms,
             **kwargs)
 
     def stax_init(self, rng, input_shape):

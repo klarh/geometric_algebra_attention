@@ -7,8 +7,12 @@ from .internal import AttentionBase
 class VectorAttention(AttentionBase):
     __doc__ = AttentionBase.__doc__
 
+    # plus, minus
+    _LINEAR_OPERATION_COUNT = 2
+
     @staticmethod
-    def get_invariant_dims(rank, invariant_mode, include_normalized_products=False):
+    def get_invariant_dims(rank, invariant_mode, include_normalized_products=False,
+                           linear_mode='partial', linear_terms=0):
         result = 1 if rank == 1 else 2
         if invariant_mode == 'full':
             result = rank**2
@@ -16,6 +20,7 @@ class VectorAttention(AttentionBase):
             result = 2*rank - 1
         if include_normalized_products:
             result *= 2
+        result += (linear_terms if rank > 1 else 0)*2
         return result
 
     def _get_products(self, inputs):
@@ -52,6 +57,41 @@ class VectorAttention(AttentionBase):
                 result['partial'] = list(series)
             result['full'].extend(series)
 
+        linear_products = []
+        if self.linear_terms and self.rank > 1:
+            terms = result[self.linear_mode]
+            linear_products = self.linear_terms*[0]
+            kernel_weights = self.math.softmax(self.linear_kernels)
+
+            for j, term in enumerate(terms):
+                if term.rank == 1:
+                    term = term._replace(products=self.algebra.vec2trivec(
+                        term.products))
+                if term.rank%2 != self.rank%2:
+                    dual_fun = [self.algebra.bivec_dual,
+                                self.algebra.trivec_dual][term.rank%2]
+                    term = term._replace(products=dual_fun(term.products))
+
+                for i in range(self.linear_terms):
+                    plus = kernel_weights[i, j, 0, 1]*term.products
+                    minus = kernel_weights[i, j, 1, 1]*term.products
+                    linear_products[i] = linear_products[i] + plus - minus
+
+        linear_terms = []
+        invar_fun = self.algebra.custom_norm
+        covar_fun = lambda x: x
+        if self.rank%2:
+            invar_fun = self.algebra.bivecvec_invariants
+            covar_fun = self.algebra.bivecvec_covariants
+        elif self.rank > 1:
+            invar_fun = self.algebra.vecvec_invariants
+            covar_fun = self.algebra.vecvec_covariants
+        for p in linear_products:
+            invariants = invar_fun(p)
+            covariants = covar_fun(p)
+            linear_terms.append(self.ProductType(
+                self.rank, p, invariants, covariants))
+
         if self.include_normalized_products:
             for (key, series) in result.items():
                 normalized_series = []
@@ -65,5 +105,8 @@ class VectorAttention(AttentionBase):
                         covariants=product.covariants*scaling)
                     normalized_series.append(normalized_product)
                 series.extend(normalized_series)
+
+        for key in list(result):
+            result[key].extend(linear_terms)
 
         return result, broadcast_indices

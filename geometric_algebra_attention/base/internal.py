@@ -79,6 +79,8 @@ class AttentionBase:
     :param rank: Degree of correlations to consider. 2 for pairwise attention, 3 for triplet-wise attention, and so on. Memory and computational complexity scales as `N**rank`
     :param invariant_mode: Type of rotation-invariant quantities to embed into the network. 'single' (use only the invariants of the final geometric product), 'partial' (use invariants for the intermediate steps to build the final geometric product), or 'full' (calculate all invariants that are possible when building the final geometric product)
     :param include_normalized_products: If True, for whatever set of products that will be computed (for a given `invariant_mode`), also include the normalized multivector for each product
+    :param linear_mode: Type of geometric product terms to use to build linear combinations for the final attention mechanism: 'partial' (use invariants for the intermediate steps to build the final geometric product) or 'full' (use all invariants that are possible when building the final geometric product)
+    :param linear_terms: Number of linear terms to incorporate for the final attention mechanism
 
     """
 
@@ -104,7 +106,8 @@ class AttentionBase:
     def __init__(self, score_net, value_net, reduce=True,
                  merge_fun='mean', join_fun='mean', rank=2,
                  invariant_mode='single', covariant_mode='single',
-                 include_normalized_products=False):
+                 include_normalized_products=False,
+                 linear_mode='partial', linear_terms=0):
         self.score_net = score_net
         self.value_net = value_net
         self.reduce = reduce
@@ -114,14 +117,17 @@ class AttentionBase:
         self.invariant_mode = invariant_mode
         self.covariant_mode = covariant_mode
         self.include_normalized_products = include_normalized_products
+        self.linear_mode = linear_mode
+        self.linear_terms = int(linear_terms)
 
-        for mode in [invariant_mode, covariant_mode]:
+        for mode in [invariant_mode, covariant_mode, linear_mode]:
             assert mode in ['full', 'partial', 'single']
 
     @property
     def invariant_dims(self):
         return self.get_invariant_dims(
-            self.rank, self.invariant_mode, self.include_normalized_products)
+            self.rank, self.invariant_mode, self.include_normalized_products,
+            self.linear_mode, self.linear_terms)
 
     def _build_weight_definitions(self, n_dim):
         result = self.WeightDefinitionSet({}, {})
@@ -138,6 +144,17 @@ class AttentionBase:
             result.groups['join_kernels'] = [self.WeightDefinition(
                 'join_kernel_{}'.format(i), (n_dim, n_dim), stdev)
                                       for i in range(2)]
+
+        if self.linear_terms:
+            num_terms = 1
+            if self.linear_mode == 'full':
+                num_terms = self.rank*(self.rank + 1)//2
+            elif self.linear_mode == 'partial':
+                num_terms = self.rank
+            result.singles['linear_kernels'] = self.WeightDefinition(
+                'linear_kernels',
+                (self.linear_terms, num_terms, self._LINEAR_OPERATION_COUNT, 2),
+                1.)
 
         return result
 

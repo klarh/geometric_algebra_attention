@@ -7,8 +7,12 @@ from .internal import AttentionBase
 class MultivectorAttention(AttentionBase):
     __doc__ = AttentionBase.__doc__
 
+    # plus, minus, plusdual, minusdual
+    _LINEAR_OPERATION_COUNT = 4
+
     @staticmethod
-    def get_invariant_dims(rank, invariant_mode, include_normalized_products=False):
+    def get_invariant_dims(rank, invariant_mode, include_normalized_products=False,
+                           linear_mode='partial', linear_terms=0):
         result = 4
         if invariant_mode == 'full':
             result = 4*rank*(rank + 1)//2
@@ -16,6 +20,7 @@ class MultivectorAttention(AttentionBase):
             result = 4*rank
         if include_normalized_products:
             result *= 2
+        result += (linear_terms if rank > 1 else 0)*4
         return result
 
     def _get_products(self, inputs):
@@ -42,6 +47,29 @@ class MultivectorAttention(AttentionBase):
                 result['partial'] = list(series)
             result['full'].extend(series)
 
+        linear_products = []
+        if self.linear_terms and self.rank > 1:
+            terms = result[self.linear_mode]
+            linear_products = self.linear_terms*[0]
+            kernel_weights = self.math.softmax(self.linear_kernels)
+
+            for j, term in enumerate(terms):
+                termdual = term._replace(products=self.algebra.mvec_dual(term.products))
+
+                for i in range(self.linear_terms):
+                    plus = kernel_weights[i, j, 0, 1]*term.products
+                    minus = kernel_weights[i, j, 1, 1]*term.products
+                    plusdual = kernel_weights[i, j, 2, 1]*termdual.products
+                    minusdual = kernel_weights[i, j, 3, 1]*termdual.products
+                    linear_products[i] = (linear_products[i] + plus - minus +
+                                          plusdual - minusdual)
+
+        linear_terms = []
+        for p in linear_products:
+            invariants = self.algebra.mvecmvec_invariants(p)
+            linear_terms.append(self.ProductType(
+                self.rank, p, invariants, p))
+
         if self.include_normalized_products:
             for (key, series) in result.items():
                 normalized_series = []
@@ -55,5 +83,8 @@ class MultivectorAttention(AttentionBase):
                         covariants=product.covariants*scaling)
                     normalized_series.append(normalized_product)
                 series.extend(normalized_series)
+
+        for key in list(result):
+            result[key].extend(linear_terms)
 
         return result, broadcast_indices

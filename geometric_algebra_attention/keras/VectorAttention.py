@@ -10,10 +10,14 @@ class VectorAttention(AttentionBase, base.VectorAttention, keras.layers.Layer):
     def __init__(self, score_net, value_net, reduce=True,
                  merge_fun='mean', join_fun='mean', rank=2,
                  invariant_mode='single', covariant_mode='single',
-                 include_normalized_products=False, **kwargs):
+                 include_normalized_products=False,
+                 linear_mode='partial', linear_terms=0,
+                 **kwargs):
         keras.layers.Layer.__init__(self, **kwargs)
         base.VectorAttention.__init__(
             self, score_net, value_net, reduce, merge_fun, join_fun, rank,
-            invariant_mode, covariant_mode, include_normalized_products)
+            invariant_mode, covariant_mode, include_normalized_products,
+            linear_mode, linear_terms,
+        )
 
 keras.utils.get_custom_objects()['VectorAttention'] = VectorAttention

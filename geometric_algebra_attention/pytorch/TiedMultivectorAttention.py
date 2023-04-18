@@ -21,6 +21,8 @@ class TiedMultivectorAttention(
         covariant_mode="partial",
         include_normalized_products=False,
         convex_covariants=False,
+        linear_mode='partial',
+        linear_terms=0,
         **kwargs
     ):
         Multivector2MultivectorAttention.__init__(
@@ -37,6 +39,8 @@ class TiedMultivectorAttention(
             covariant_mode=covariant_mode,
             include_normalized_products=include_normalized_products,
             convex_covariants=convex_covariants,
+            linear_mode=linear_mode,
+            linear_terms=linear_terms,
             **kwargs
         )
 
