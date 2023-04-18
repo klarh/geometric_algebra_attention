@@ -19,14 +19,9 @@ class CustomNorm(pt.autograd.Function):
 custom_norm = CustomNorm.apply
 
 @functools.lru_cache
-def _bivec_dual_swizzle(dtype, device):
-    swizzle = pt.as_tensor([
-        [0, 0, 0, -1],
-        [0, 0, 1, 0],
-        [0, -1, 0, 0],
-        [1, 0, 0, 0]
-    ], dtype=dtype, device=device)
-    return swizzle
+def _bivec_dual_mult(dtype, device):
+    mult = pt.as_tensor([1, -1, 1, -1], dtype=dtype, device=device)
+    return mult
 
 def bivec_dual(b):
     """scalar + bivector -> vector + trivector
@@ -35,8 +30,21 @@ def bivec_dual(b):
     bivector) with basis (1, e12, e13, e23).
 
     """
-    swizzle = _bivec_dual_swizzle(b.dtype, b.device).detach()
-    return pt.tensordot(b, swizzle, 1)
+    return pt.flip(b, [-1])*_bivec_dual_mult(b.dtype, b.device).detach()
+
+@functools.lru_cache
+def _trivec_dual_mult(dtype, device):
+    mult = pt.as_tensor([-1, 1, -1, 1], dtype=dtype, device=device)
+    return mult
+
+def trivec_dual(b):
+    """vector + trivector -> scalar + bivector
+
+    Calculates the dual of an input value, expressed as (scalar,
+    bivector) with basis (1, e12, e13, e23).
+
+    """
+    return pt.flip(b, [-1])*_trivec_dual_mult(b.dtype, b.device).detach()
 
 @functools.lru_cache
 def _vecvec_swizzle(dtype, device):
@@ -185,6 +193,26 @@ def trivecvec(q, d):
 trivecvec_invariants = vecvec_invariants
 
 trivecvec_covariants = vecvec_covariants
+
+def vec2trivec(v):
+    """vector -> vector + trivector(0)
+
+    This function simply appends a 0 in the appropriate location to
+    treat a lone vector as a vector-trivector combination with basis
+    (e1, e2, e3, e123).
+
+    """
+    trivec = pt.zeros_like(v[..., :1])
+    return pt.cat([v, trivec], axis=-1)
+
+@functools.lru_cache
+def _mvec_dual_mult(dtype, device):
+    mult = pt.as_tensor([
+        -1, -1, 1, -1, 1, -1, 1, 1], dtype=dtype, device=device)
+    return mult
+
+def mvec_dual(m):
+    return pt.flip(m, [-1])*_mvec_dual_mult(m.dtype, m.device).detach()
 
 @functools.lru_cache
 def _mvecmvec_swizzle(dtype, device):

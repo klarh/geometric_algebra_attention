@@ -19,13 +19,16 @@ def bivec_dual(b):
     bivector) with basis (1, e12, e13, e23).
 
     """
-    swizzle = tf.constant([
-        [0, 0, 0, -1],
-        [0, 0, 1, 0],
-        [0, -1, 0, 0],
-        [1, 0, 0, 0]
-    ], dtype=b.dtype)
-    return tf.tensordot(b, swizzle, 1)
+    return b[..., ::-1]*(1, -1, 1, -1)
+
+def trivec_dual(t):
+    """vector + trivector -> scalar + bivector
+
+    Calculates the dual of an input value, expressed as (scalar,
+    bivector) with basis (1, e12, e13, e23).
+
+    """
+    return t[..., ::-1]*(-1, 1, -1, 1)
 
 def vecvec(a, b):
     """vector*vector -> scalar + bivector
@@ -159,6 +162,26 @@ def trivecvec(q, d):
 trivecvec_invariants = vecvec_invariants
 
 trivecvec_covariants = vecvec_covariants
+
+def vec2trivec(v):
+    """vector -> vector + trivector(0)
+
+    This function simply appends a 0 in the appropriate location to
+    treat a lone vector as a vector-trivector combination with basis
+    (e1, e2, e3, e123).
+
+    """
+    trivec = tf.zeros_like(v[..., :1])
+    return tf.concat([v, trivec], axis=-1)
+
+def mvec_dual(m):
+    """multivector -> multivector
+
+    Calculates the dual of the given multivector with basis (1, e1,
+    e2, e3, e12, e13, e23, e123).
+
+    """
+    return m[..., ::-1]*(-1, -1, 1, -1, 1, -1, 1, 1)
 
 def mvecmvec(a, b):
     """multivector*multivector -> multivector
