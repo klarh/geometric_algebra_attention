@@ -69,8 +69,9 @@ class AttentionBase:
         value_mask = parsed_mask[0].values
         if position_mask is not None:
             return self.math.any(position_mask, axis=-1)
-        else:
+        elif value_mask is not None:
             return self.math.any(value_mask, axis=-1)
+        return None
 
     @classmethod
     def from_config(cls, config):
