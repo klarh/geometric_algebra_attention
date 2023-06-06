@@ -3,6 +3,14 @@ from tensorflow import keras
 
 from ..tensorflow.VectorAttention import VectorAttention as TFAttention
 
+def flatten_nested_lists_or_tuples(x):
+    if isinstance(x, (list, tuple)):
+        result = []
+        for piece in x:
+            result.extend(flatten_nested_lists_or_tuples(piece))
+        return result
+    return [x]
+
 class AttentionBase:
     algebra = TFAttention.algebra
 
@@ -50,6 +58,10 @@ class AttentionBase:
     def compute_mask(self, inputs, mask=None):
         """Calculate the output mask of this layer given input shapes and masks."""
         if not self.reduce or mask is None:
+            if isinstance(mask, (list, tuple)):
+                for m in flatten_nested_lists_or_tuples(mask):
+                    if m is not None:
+                        return m
             return mask
 
         parsed_mask = self._parse_inputs(mask)
