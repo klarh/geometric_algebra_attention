@@ -37,6 +37,9 @@ class MomentumLayerNormalization(keras.layers.Layer):
             return tf.where(mask[..., None], result, inputs)
         return result
 
+    def compute_mask(self, inputs, mask=None):
+        return mask
+
     def get_config(self):
         result = super().get_config()
         result['momentum'] = self.momentum
