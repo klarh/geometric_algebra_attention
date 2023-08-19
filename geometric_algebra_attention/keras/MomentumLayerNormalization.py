@@ -27,7 +27,7 @@ class MomentumLayerNormalization(keras.layers.Layer):
             name = 'norm', shape=shape, initializer='ones', trainable=False)
 
     def call(self, inputs, training=False, mask=None):
-        if training:
+        if training and self.trainable:
             norm = custom_norm(inputs)
             norm = tf.math.reduce_mean(norm, keepdims=False)
             self.norm.assign(self.momentum*self.norm + (1 - self.momentum)*norm)

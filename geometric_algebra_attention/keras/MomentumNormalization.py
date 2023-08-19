@@ -35,7 +35,7 @@ class MomentumNormalization(keras.layers.Layer):
         self._summary_axes = tuple(range(len(input_shape) - 1))
 
     def call(self, inputs, training=False, mask=None):
-        if training:
+        if training and self.trainable:
             if mask is not None:
                 values = tf.ragged.boolean_mask(inputs, mask=mask)
             else:
