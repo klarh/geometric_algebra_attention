@@ -79,8 +79,7 @@ class Multivector2MultivectorAttention:
         else:
             weights = self.vector_kernels
 
-        covariants = np.dot(covariants_, weights[:len(covariants_)])
-        return sum(covariants)
+        return np.dot(covariants_, weights[:len(covariants_)])
 
     def _evaluate(self, inputs, mask=None):
         parsed_inputs = self._parse_inputs(inputs)
