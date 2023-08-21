@@ -1,5 +1,6 @@
 
 import itertools
+import numpy as np
 
 class Multivector2MultivectorAttention:
     r"""Calculate rotation-equivariant (multivector-valued) geometric product attention.
@@ -78,8 +79,7 @@ class Multivector2MultivectorAttention:
         else:
             weights = self.vector_kernels
 
-        covariants = [
-            vec*weights[i] for (i, vec) in enumerate(covariants_)]
+        covariants = np.dot(covariants_, weights[:len(covariants_)])
         return sum(covariants)
 
     def _evaluate(self, inputs, mask=None):
