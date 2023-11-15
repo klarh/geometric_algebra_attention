@@ -24,6 +24,7 @@ class MomentumLayerNormalization(pt.nn.Module):
         if self.training:
             norm = custom_norm(x)
             norm = pt.mean(norm)
-            self.norm[:] = norm.detach()
+            mixture = self.momentum*self.norm + (1.0 - self.momentum)*norm
+            self.norm[:] = mixture.detach()
 
         return x/pt.maximum(self.norm, self.epsilon).detach()
