@@ -17,7 +17,7 @@ class NamedArrayCache:
     def get(cls, name, array, dtype, device):
         key = (name, dtype, device)
         if key not in cls._cache:
-            cls._cache = pt.as_tensor(array, dtype=dtype, device=device)
+            cls._cache[key] = pt.as_tensor(array, dtype=dtype, device=device)
         return cls._cache[key]
 
     @classmethod
