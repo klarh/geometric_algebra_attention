@@ -10,8 +10,9 @@ except ImportError:
 import numpy as np
 from geometric_algebra_attention import jax as gala
 
-from test_internals import AllTests
+from test_internals import AllTests, deferred_class
 
+@deferred_class
 class JaxTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_value_layer(

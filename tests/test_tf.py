@@ -7,10 +7,11 @@ import tensorflow as tf
 from tensorflow import keras
 from geometric_algebra_attention import tensorflow as gala
 
-from test_internals import AllTests, TFRandom
+from test_internals import deferred_class, AllTests, TFRandom
 
 hypothesis.register_random(TFRandom)
 
+@deferred_class
 class TensorflowTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_value_layer(

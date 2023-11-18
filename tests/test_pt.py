@@ -9,7 +9,7 @@ import numpy.testing as npt
 import torch as pt
 from geometric_algebra_attention import pytorch as gala
 
-from test_internals import AllTests, finite_dtype, point_cloud
+from test_internals import AllTests, deferred_class, finite_dtype, point_cloud
 
 pt.set_default_tensor_type('torch.cuda.FloatTensor')
 
@@ -27,6 +27,7 @@ class TorchRandom:
     def setstate(state):
         pt.random.set_rng_state(state)
 
+@deferred_class
 class PytorchTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_value_layer(

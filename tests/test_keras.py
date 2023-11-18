@@ -10,10 +10,11 @@ import tensorflow as tf
 from tensorflow import keras
 from geometric_algebra_attention import keras as gala
 
-from test_internals import AllTests, TFRandom, finite_dtype, point_cloud
+from test_internals import AllTests, TFRandom, deferred_class, finite_dtype, point_cloud
 
 hypothesis.register_random(TFRandom)
 
+@deferred_class
 class KerasTests(AllTests, unittest.TestCase):
     @functools.lru_cache(maxsize=2)
     def get_value_layer(

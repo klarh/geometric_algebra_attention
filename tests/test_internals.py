@@ -1,4 +1,6 @@
 
+import collections
+
 import rowan
 import numpy as np
 from numpy import testing as npt
@@ -48,11 +50,37 @@ def unit_quaternions(draw):
     assume(np.sum(np.square(result)) > 1e-5)
     return result/np.linalg.norm(result)
 
+class Deferred:
+    REGISTRY = {}
+
+    RegistryType = collections.namedtuple('RegistryType', ['function', 'given_args'])
+
+    @classmethod
+    def given(cls, *args):
+        def result(f):
+            reg = cls.RegistryType(f, args)
+            cls.REGISTRY[f.__name__] = reg
+            return f
+        return result
+
+def deferred_class(c):
+    for cls in c.__mro__:
+        for (name, attr) in vars(cls).items():
+            try:
+                if name not in Deferred.REGISTRY:
+                    continue
+            except TypeError:
+                continue
+            reg = Deferred.REGISTRY[name]
+            wrapped = given(*reg.given_args)(reg.function)
+            wrapped = settings(deadline=None)(wrapped)
+            setattr(c, name, wrapped)
+    return c
+
 class AllTests:
     DIM = DIM
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         hs.integers(1, 3),
@@ -79,8 +107,7 @@ class AllTests:
         err = np.max(np.square(prediction1 - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         hs.integers(0, 128),
         hs.integers(0, 128),
         hs.integers(1, 3),
@@ -120,8 +147,7 @@ class AllTests:
         err = np.max(np.square(prediction1 - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         hs.integers(1, 3),
@@ -149,8 +175,7 @@ class AllTests:
         err = np.max(np.square(prediction1 - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         hs.integers(0, 128),
         hs.integers(0, 128),
         hs.integers(1, 3),
@@ -190,8 +215,7 @@ class AllTests:
         err = np.max(np.square(prediction1 - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         hs.integers(1, 3),
@@ -224,8 +248,7 @@ class AllTests:
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         hs.integers(1, 3),
@@ -258,8 +281,7 @@ class AllTests:
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         point_cloud())
@@ -276,8 +298,7 @@ class AllTests:
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         point_cloud())
@@ -294,8 +315,7 @@ class AllTests:
         err = np.max(np.square(prediction1_prime - prediction2))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         hs.integers(1, 3),
@@ -329,8 +349,7 @@ class AllTests:
         err = np.max(np.square(pred1_invar - pred2_invar))
         self.assertLess(err, 1e-5)
 
-    @settings(deadline=None)
-    @given(
+    @Deferred.given(
         unit_quaternions(),
         point_cloud(),
         hs.integers(1, 3),
