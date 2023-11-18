@@ -2,4 +2,3 @@ jax[cpu]
 tensorflow
 torch
 m2r2
-sphinx-rtd-theme
