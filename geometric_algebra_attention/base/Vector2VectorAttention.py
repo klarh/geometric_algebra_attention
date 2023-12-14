@@ -1,3 +1,4 @@
+import numpy as np
 
 class Vector2VectorAttention:
     r"""Calculate rotation-covariant (vector-valued) geometric product attention.
@@ -76,9 +77,7 @@ class Vector2VectorAttention:
         else:
             weights = self.vector_kernels
 
-        covariants = [
-            vec*weights[i] for (i, vec) in enumerate(covariants_)]
-        return sum(covariants)
+        return np.dot(covariants_, weights[:len(covariants_)])
 
     def _evaluate(self, inputs, mask=None):
         parsed_inputs = self._parse_inputs(inputs)
