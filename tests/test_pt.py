@@ -373,7 +373,17 @@ class PytorchTests(AllTests, unittest.TestCase):
         r[~mask] += 1
         v[~mask] += 1
         second_result = layer.forward((r, v), mask=mask).detach().cpu().numpy()
-        second_result[~mask] = first_result[~mask]
+        second_result[~mask.cpu().numpy()] = first_result[~mask.cpu().numpy()]
+        npt.assert_allclose(first_result, second_result)
+
+    @hypothesis.given(point_cloud(weights=False))
+    def test_basic_attention(self, cloud):
+        (r, v) = cloud
+        (r, v) = map(pt.as_tensor, (r, v))
+
+        layer = self.get_value_layer('basic_attention', reduce=False)
+        first_result, att = [arr.detach().cpu().numpy() for arr in layer.forward((r, v), return_attention=True)]
+        second_result = layer.forward((r, v), return_attention=False).detach().cpu().numpy()
         npt.assert_allclose(first_result, second_result)
 
 if __name__ == '__main__':
