@@ -328,7 +328,7 @@ class PytorchTests(AllTests, unittest.TestCase):
 
     @hypothesis.given(
         hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
-    def basic_momentum(self, x):
+    def test_basic_momentum(self, x):
         hypothesis.assume(np.all(np.abs(x) > 1e-3))
         hypothesis.assume(len(np.unique(np.round(x, 3))) > 1)
         hypothesis.assume(x[..., 0].size > 1)
@@ -347,7 +347,7 @@ class PytorchTests(AllTests, unittest.TestCase):
 
     @hypothesis.given(
         hnp.arrays(np.float32, hnp.array_shapes(min_dims=2), elements=finite_dtype))
-    def basic_momentum_layer(self, x):
+    def test_basic_momentum_layer(self, x):
         hypothesis.assume(np.all(np.abs(x) > 1e-3))
         hypothesis.assume(len(np.unique(np.round(x, 3))) > 1)
         hypothesis.assume(x[..., 0].size > 1)
@@ -359,10 +359,11 @@ class PytorchTests(AllTests, unittest.TestCase):
         for _ in range(32):
             output = layer.forward(pt.as_tensor(x))
 
+        output = output.detach().cpu().numpy()
         npt.assert_allclose(norm(output), 1., rtol=1e-2, atol=1e-2)
 
     @hypothesis.given(point_cloud(weights=True))
-    def basic_mask(self, cloud):
+    def test_basic_mask(self, cloud):
         (r, v, w) = cloud
         mask = np.argsort(w) > 1
         (r, v, mask) = map(pt.as_tensor, (r, v, mask))
